@@ -1,3 +1,4 @@
+
 # Epitychia - Smart Clipboard Application
 
 Epitychia is an intelligent, cross-platform clipboard application that eliminates digital friction in copy-paste workflows. It proactively understands copied content and suggests relevant, time-saving actions while maintaining privacy through on-device AI processing.
@@ -188,3 +189,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Built with modern web technologies and AI/ML frameworks
 - Inspired by the need for intelligent clipboard management
 - Designed with privacy and user experience as top priorities
+
