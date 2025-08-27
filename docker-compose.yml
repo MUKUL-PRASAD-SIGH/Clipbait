@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: epitychia-postgres
+    environment:
+      POSTGRES_DB: epitychia
+      POSTGRES_USER: epitychia_user
+      POSTGRES_PASSWORD: epitychia_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - epitychia-network
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: epitychia-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - epitychia-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: epitychia-backend
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://epitychia_user:epitychia_password@postgres:5432/epitychia
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-jwt-secret-key
+      FIREBASE_PROJECT_ID: your-firebase-project-id
+      FIREBASE_PRIVATE_KEY: your-firebase-private-key
+      FIREBASE_CLIENT_EMAIL: your-firebase-client-email
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - epitychia-network
+    command: npm run dev
+
+  # Desktop App Development Server
+  desktop-dev:
+    build:
+      context: ./desktop
+      dockerfile: Dockerfile.dev
+    container_name: epitychia-desktop-dev
+    environment:
+      VITE_API_URL: http://localhost:3000/api
+    ports:
+      - "1420:1420"
+    volumes:
+      - ./desktop:/app
+      - /app/node_modules
+    networks:
+      - epitychia-network
+    command: npm run dev
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  epitychia-network:
+    driver: bridge
