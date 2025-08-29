@@ -8,6 +8,8 @@
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "build:android": "cd android && ./gradlew assembleRelease",
     "build:ios": "cd ios && xcodebuild -workspace EpitychiaApp.xcworkspace -scheme EpitychiaApp -configuration Release -destination generic/platform=iOS -archivePath EpitychiaApp.xcarchive archive"
   },
@@ -46,7 +48,9 @@
     "metro-react-native-babel-preset": "0.76.8",
     "prettier": "^2.4.1",
     "react-test-renderer": "18.2.0",
-    "typescript": "4.8.4"
+    "typescript": "4.8.4",
+    "@testing-library/react-native": "^12.4.2",
+    "@testing-library/jest-native": "^5.4.3"
   },
   "engines": {
     "node": ">=16"
