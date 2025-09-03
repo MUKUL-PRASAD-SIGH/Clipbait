@@ -37,8 +37,8 @@ class AIService {
   async classifyText(text: string): Promise<DetectedEntity[]> {
     const entities: DetectedEntity[] = [];
 
-    // Email detection
-    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+    // Improved email detection
+    const emailRegex = /\b[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*\b/g;
     let match;
     while ((match = emailRegex.exec(text)) !== null) {
       entities.push({
@@ -50,20 +50,34 @@ class AIService {
       });
     }
 
-    // Phone number detection
-    const phoneRegex = /(\+?1?[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/g;
-    while ((match = phoneRegex.exec(text)) !== null) {
-      entities.push({
-        type: 'phone',
-        value: match[0],
-        confidence: 0.9,
-        startIndex: match.index,
-        endIndex: match.index + match[0].length,
-      });
-    }
+    // Improved international phone number detection
+    const phonePatterns = [
+      // International format: +1-555-123-4567, +44 20 7946 0958
+      /\+\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g,
+      // US format: (555) 123-4567, 555-123-4567, 555.123.4567
+      /\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g,
+      // UK format: 020 7946 0958
+      /\b\d{3,4}[-.\s]?\d{4}[-.\s]?\d{4}\b/g,
+    ];
 
-    // URL detection
-    const urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g;
+    phonePatterns.forEach(regex => {
+      while ((match = regex.exec(text)) !== null) {
+        // Validate it's actually a phone number (not just random digits)
+        const cleaned = match[0].replace(/\D/g, '');
+        if (cleaned.length >= 7 && cleaned.length <= 15) {
+          entities.push({
+            type: 'phone',
+            value: match[0],
+            confidence: 0.9,
+            startIndex: match.index,
+            endIndex: match.index + match[0].length,
+          });
+        }
+      }
+    });
+
+    // Improved URL detection
+    const urlRegex = /https?:\/\/(?:[-\w.])+(?:\:[0-9]+)?(?:\/(?:[\w\/_.])*(?:\?(?:[\w&=%.])*)?(?:\#(?:[\w.])*)?)?/g;
     while ((match = urlRegex.exec(text)) !== null) {
       entities.push({
         type: 'url',
@@ -74,31 +88,83 @@ class AIService {
       });
     }
 
-    // Date detection
-    const dateRegex = /\b\d{1,2}\/\d{1,2}\/\d{4}\b|\b\d{4}-\d{2}-\d{2}\b/g;
-    while ((match = dateRegex.exec(text)) !== null) {
+    // Improved date detection (multiple formats)
+    const datePatterns = [
+      /\b\d{1,2}\/\d{1,2}\/\d{4}\b/g, // MM/DD/YYYY
+      /\b\d{4}-\d{2}-\d{2}\b/g, // YYYY-MM-DD
+      /\b\d{1,2}-\d{1,2}-\d{4}\b/g, // MM-DD-YYYY
+      /\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}\b/gi, // Month DD, YYYY
+    ];
+
+    datePatterns.forEach(regex => {
+      while ((match = regex.exec(text)) !== null) {
+        entities.push({
+          type: 'date',
+          value: match[0],
+          confidence: 0.85,
+          startIndex: match.index,
+          endIndex: match.index + match[0].length,
+        });
+      }
+    });
+
+    // Improved address detection
+    const addressPatterns = [
+      // US addresses: 123 Main Street, 456 Oak Ave
+      /\d+\s+[A-Za-z\s]+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Way|Place|Pl|Court|Ct|Circle|Cir)(?:\s+[A-Za-z\s]*)?/gi,
+      // International addresses with postal codes
+      /\d+\s+[A-Za-z\s]+,\s*[A-Za-z\s]+,?\s*[A-Z]{2}\s*\d{5}(?:-\d{4})?/gi,
+    ];
+
+    addressPatterns.forEach(regex => {
+      while ((match = regex.exec(text)) !== null) {
+        entities.push({
+          type: 'address',
+          value: match[0],
+          confidence: 0.8,
+          startIndex: match.index,
+          endIndex: match.index + match[0].length,
+        });
+      }
+    });
+
+    // Credit card detection (for security flagging)
+    const creditCardRegex = /\b(?:\d{4}[-\s]?){3}\d{4}\b/g;
+    while ((match = creditCardRegex.exec(text)) !== null) {
       entities.push({
-        type: 'date',
+        type: 'credit_card',
         value: match[0],
-        confidence: 0.85,
+        confidence: 0.9,
         startIndex: match.index,
         endIndex: match.index + match[0].length,
       });
     }
 
-    // Address detection
-    const addressRegex = /\d+\s+[A-Za-z\s]+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr)/gi;
-    while ((match = addressRegex.exec(text)) !== null) {
-      entities.push({
-        type: 'address',
-        value: match[0],
-        confidence: 0.8,
-        startIndex: match.index,
-        endIndex: match.index + match[0].length,
-      });
-    }
+    // Remove duplicates and overlapping matches
+    return this.removeDuplicateEntities(entities);
+  }
 
-    return entities;
+  private removeDuplicateEntities(entities: DetectedEntity[]): DetectedEntity[] {
+    const filtered: DetectedEntity[] = [];
+    
+    entities.sort((a, b) => a.startIndex - b.startIndex);
+    
+    for (const entity of entities) {
+      const overlapping = filtered.find(existing => 
+        (entity.startIndex >= existing.startIndex && entity.startIndex < existing.endIndex) ||
+        (entity.endIndex > existing.startIndex && entity.endIndex <= existing.endIndex)
+      );
+      
+      if (!overlapping) {
+        filtered.push(entity);
+      } else if (entity.confidence > overlapping.confidence) {
+        // Replace with higher confidence entity
+        const index = filtered.indexOf(overlapping);
+        filtered[index] = entity;
+      }
+    }
+    
+    return filtered;
   }
 
   private categorizeContent(text: string, entities: DetectedEntity[]): ContentCategory {

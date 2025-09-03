@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { ClipboardItem, ActionSuggestion } from '../types';
 import { clipboardApi } from '../services/api';
 import toast from 'react-hot-toast';
@@ -9,6 +10,8 @@ interface ClipboardState {
   suggestions: ActionSuggestion[];
   isLoading: boolean;
   searchQuery: string;
+  isOffline: boolean;
+  pendingSync: ClipboardItem[];
   
   // Actions
   initialize: () => Promise<void>;
@@ -17,14 +20,20 @@ interface ClipboardState {
   deleteItem: (id: string) => Promise<void>;
   setSearchQuery: (query: string) => void;
   executeSuggestion: (suggestion: ActionSuggestion) => Promise<void>;
+  syncPendingItems: () => Promise<void>;
+  setOfflineStatus: (offline: boolean) => void;
 }
 
-export const useClipboardStore = create<ClipboardState>((set, get) => ({
-  items: [],
-  selectedItem: null,
-  suggestions: [],
-  isLoading: false,
-  searchQuery: '',
+export const useClipboardStore = create<ClipboardState>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      selectedItem: null,
+      suggestions: [],
+      isLoading: false,
+      searchQuery: '',
+      isOffline: false,
+      pendingSync: [],
 
   initialize: async () => {
     set({ isLoading: true });
@@ -39,20 +48,61 @@ export const useClipboardStore = create<ClipboardState>((set, get) => ({
   },
 
   addClipboardItem: async (content: string) => {
+    const tempId = `temp-${Date.now()}`;
+    const tempItem: ClipboardItem = {
+      id: tempId,
+      content,
+      contentType: 'text',
+      entities: [],
+      suggestions: [],
+      metadata: { category: 'other', confidence: 0 },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Add to local state immediately for offline support
+    set(state => {
+      const updatedItems = [tempItem, ...state.items];
+      const limitedItems = updatedItems.slice(0, 5);
+      
+      return {
+        items: limitedItems,
+        selectedItem: tempItem,
+        suggestions: []
+      };
+    });
+
     try {
       const newItem = await clipboardApi.addItem(content);
+      
+      // Replace temp item with real item
       set(state => ({
-        items: [newItem, ...state.items],
-        selectedItem: newItem,
+        items: state.items.map(item => 
+          item.id === tempId ? newItem : item
+        ),
+        selectedItem: state.selectedItem?.id === tempId ? newItem : state.selectedItem,
         suggestions: newItem.suggestions || []
       }));
       
       if (newItem.suggestions && newItem.suggestions.length > 0) {
-        toast.success(`Found ${newItem.suggestions.length} suggestions for your clipboard!`);
+        toast.success(`Found ${newItem.suggestions.length} smart suggestions!`, {
+          icon: '🧠',
+          duration: 3000,
+        });
       }
     } catch (error) {
       console.error('Failed to add clipboard item:', error);
-      toast.error('Failed to process clipboard content');
+      
+      // Mark as pending sync for offline support
+      set(state => ({
+        pendingSync: [...state.pendingSync, tempItem],
+        isOffline: true
+      }));
+      
+      toast.error('Working offline - will sync when connected', {
+        icon: '📡',
+        duration: 2000,
+      });
     }
   },
 
@@ -90,5 +140,51 @@ export const useClipboardStore = create<ClipboardState>((set, get) => ({
       console.error('Failed to execute suggestion:', error);
       toast.error('Failed to execute action');
     }
+  },
+
+  // Utility functions
+  getTotalItems: () => get().items.length,
+  
+  getItemsToday: () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return get().items.filter(item => new Date(item.createdAt) >= today).length;
+  },
+
+  clearHistory: () => {
+    set({ items: [], selectedItem: null, suggestions: [] });
+    toast.success('Clipboard history cleared');
+  },
+
+  syncPendingItems: async () => {
+    const { pendingSync } = get();
+    if (pendingSync.length === 0) return;
+
+    try {
+      for (const item of pendingSync) {
+        await clipboardApi.addItem(item.content);
+      }
+      
+      set({ pendingSync: [], isOffline: false });
+      toast.success('Synced offline items');
+    } catch (error) {
+      console.error('Failed to sync pending items:', error);
+    }
+  },
+
+  setOfflineStatus: (offline: boolean) => {
+    set({ isOffline: offline });
+    if (!offline) {
+      get().syncPendingItems();
+    }
   }
-}));
+    }),
+    {
+      name: 'clipboard-storage',
+      partialize: (state) => ({
+        items: state.items,
+        pendingSync: state.pendingSync,
+      }),
+    }
+  )
+);

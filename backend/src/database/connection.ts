@@ -8,11 +8,27 @@ export const initializeDatabase = async (): Promise<void> => {
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      // Connection pool settings for better performance and security
+      max: 20, // Maximum number of connections
+      min: 2,  // Minimum number of connections
+      idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
+      connectionTimeoutMillis: 2000, // Timeout after 2 seconds
+      maxUses: 7500, // Close connection after 7500 uses
     });
 
     // Test connection
-    await pool.query('SELECT NOW()');
+    const result = await pool.query('SELECT NOW(), version()');
     logger.info('Database connected successfully');
+    logger.info(`PostgreSQL version: ${result.rows[0].version.split(' ')[1]}`);
+    
+    // Set up connection event handlers
+    pool.on('connect', () => {
+      logger.debug('New database connection established');
+    });
+
+    pool.on('error', (err) => {
+      logger.error('Database pool error:', err);
+    });
 
     // Run migrations
     await runMigrations();
@@ -27,6 +43,14 @@ export const getPool = (): Pool => {
     throw new Error('Database not initialized');
   }
   return pool;
+};
+
+// Graceful shutdown
+export const closeDatabase = async (): Promise<void> => {
+  if (pool) {
+    await pool.end();
+    logger.info('Database connections closed');
+  }
 };
 
 const runMigrations = async (): Promise<void> => {

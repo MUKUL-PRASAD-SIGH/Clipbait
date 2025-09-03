@@ -8,9 +8,11 @@ import { logger } from './utils/logger';
 import { initializeDatabase } from './database/connection';
 import { initializeFirebase } from './services/firebase';
 import { aiService } from './services/aiService';
-import authRoutes from './routes/auth';
-import clipboardRoutes from './routes/clipboard';
-import aiRoutes from './routes/ai';
+import { cleanupService } from './services/cleanupService';
+import { authRoutes } from './routes/auth';
+import { clipboardRoutes } from './routes/clipboard';
+import { aiRoutes } from './routes/ai';
+import { apiLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -32,8 +34,11 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || "http://localhost:3001",
   credentials: true
 }));
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '1mb' })); // Reduced limit for security
 app.use(express.urlencoded({ extended: true }));
+
+// Apply rate limiting to all API routes
+app.use('/api', apiLimiter);
 
 // Make io available to routes
 app.set('io', io);
@@ -43,12 +48,13 @@ app.use('/api/auth', authRoutes);
 app.use('/api/clipboard', clipboardRoutes);
 app.use('/api/ai', aiRoutes);
 
-// Health check
+// Health check endpoint
 app.get('/health', (_req: Request, res: Response) => {
-  res.json({ 
-    status: 'OK', 
+  res.status(200).json({
+    status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: process.env.npm_package_version || '1.0.0'
+    version: '1.0.0',
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -76,6 +82,9 @@ async function startServer() {
     await initializeFirebase();
     await aiService.initialize();
     
+    // Start cleanup service
+    cleanupService.startCleanupJob();
+    
     server.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -89,6 +98,7 @@ async function startServer() {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received, shutting down gracefully');
+  cleanupService.stopCleanupJob();
   server.close(() => {
     logger.info('Process terminated');
   });
