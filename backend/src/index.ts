@@ -78,12 +78,13 @@ app.use(errorHandler);
 // Initialize services
 async function startServer() {
   try {
-    await initializeDatabase();
-    await initializeFirebase();
+    // Skip database for now - TODO: Fix later
+    // await initializeDatabase();
+    // await initializeFirebase();
     await aiService.initialize();
     
-    // Start cleanup service
-    cleanupService.startCleanupJob();
+    // Start cleanup service - Skip for now
+    // cleanupService.startCleanupJob();
     
     server.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);

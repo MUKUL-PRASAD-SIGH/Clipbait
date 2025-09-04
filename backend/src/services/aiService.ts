@@ -1,15 +1,23 @@
 import { DetectedEntity, ActionSuggestion, AIProcessingResult, ContentCategory } from '../types';
 import { logger } from '../utils/logger';
+import OpenAI from 'openai';
 
 class AIService {
   private initialized = false;
+  private openai: OpenAI | null = null;
+  private useAI = false;
 
   async initialize(): Promise<void> {
     try {
-      // In production, load ONNX model here
-      // For now, use rule-based classification
+      const apiKey = process.env.OPENAI_API_KEY;
+      if (apiKey) {
+        this.openai = new OpenAI({ apiKey });
+        this.useAI = true;
+        logger.info('AI Service initialized with OpenAI');
+      } else {
+        logger.info('AI Service initialized with rule-based classification only');
+      }
       this.initialized = true;
-      logger.info('AI Service initialized successfully');
     } catch (error) {
       logger.error('Failed to initialize AI Service:', error);
       this.initialized = true; // Fallback to rule-based
@@ -21,6 +29,16 @@ class AIService {
       await this.initialize();
     }
 
+    // Try AI-powered analysis first, fallback to rule-based
+    if (this.useAI && this.openai) {
+      try {
+        return await this.processWithAI(content);
+      } catch (error) {
+        logger.warn('AI processing failed, falling back to rule-based:', error);
+      }
+    }
+
+    // Rule-based fallback
     const entities = await this.classifyText(content);
     const category = this.categorizeContent(content, entities);
     const suggestions = this.generateSuggestions(entities);
@@ -32,6 +50,51 @@ class AIService {
       suggestions,
       confidence
     };
+  }
+
+  private async processWithAI(content: string): Promise<AIProcessingResult> {
+    const prompt = `Analyze this clipboard content and extract actionable information:
+
+Content: "${content}"
+
+Please respond with a JSON object containing:
+1. entities: Array of detected entities (email, phone, url, date, address, etc.) with their positions
+2. category: One of: contact, event, location, document, code, other
+3. suggestions: Array of suggested actions the user might want to take
+4. confidence: Overall confidence score (0-1)
+
+Focus on practical actions like "send email", "call number", "open link", "create calendar event", "open in maps", etc.
+
+Response format:
+{
+  "entities": [{"type": "email", "value": "example@email.com", "confidence": 0.95, "startIndex": 0, "endIndex": 15}],
+  "category": "contact",
+  "suggestions": [{"id": "email_1", "type": "send_email", "title": "Send Email", "description": "Send email to example@email.com", "icon": "mail", "confidence": 0.95, "metadata": {"email": "example@email.com"}}],
+  "confidence": 0.9
+}`;
+
+    const response = await this.openai!.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.1,
+      max_tokens: 1000,
+    });
+
+    const result = response.choices[0]?.message?.content;
+    if (!result) throw new Error('No response from AI');
+
+    try {
+      const parsed = JSON.parse(result);
+      return {
+        entities: parsed.entities || [],
+        category: parsed.category || 'other',
+        suggestions: parsed.suggestions || [],
+        confidence: parsed.confidence || 0.5
+      };
+    } catch (parseError) {
+      logger.error('Failed to parse AI response:', parseError);
+      throw parseError;
+    }
   }
 
   async classifyText(text: string): Promise<DetectedEntity[]> {
@@ -209,6 +272,15 @@ class AIService {
             confidence: entity.confidence,
             metadata: { email: entity.value },
           });
+          suggestions.push({
+            id: `outlook_${index}`,
+            type: 'open_app',
+            title: 'Open in Outlook',
+            description: `Compose email in Outlook`,
+            icon: 'mail-outline',
+            confidence: entity.confidence * 0.9,
+            metadata: { app: 'outlook', email: entity.value },
+          });
           break;
 
         case 'phone':
@@ -220,6 +292,15 @@ class AIService {
             icon: 'call',
             confidence: entity.confidence,
             metadata: { phone: entity.value },
+          });
+          suggestions.push({
+            id: `whatsapp_${index}`,
+            type: 'open_app',
+            title: 'Open in WhatsApp',
+            description: `Message on WhatsApp`,
+            icon: 'logo-whatsapp',
+            confidence: entity.confidence * 0.8,
+            metadata: { app: 'whatsapp', phone: entity.value },
           });
           break;
 
@@ -233,6 +314,29 @@ class AIService {
             confidence: entity.confidence,
             metadata: { url: entity.value },
           });
+          
+          // Suggest specific apps based on URL
+          if (entity.value.includes('github.com')) {
+            suggestions.push({
+              id: `github_${index}`,
+              type: 'open_app',
+              title: 'Open in GitHub Desktop',
+              description: 'Open repository in GitHub Desktop',
+              icon: 'logo-github',
+              confidence: entity.confidence * 0.9,
+              metadata: { app: 'github-desktop', url: entity.value },
+            });
+          } else if (entity.value.includes('youtube.com') || entity.value.includes('youtu.be')) {
+            suggestions.push({
+              id: `youtube_${index}`,
+              type: 'open_app',
+              title: 'Open in YouTube App',
+              description: 'Watch in YouTube app',
+              icon: 'logo-youtube',
+              confidence: entity.confidence * 0.9,
+              metadata: { app: 'youtube', url: entity.value },
+            });
+          }
           break;
 
         case 'date':
@@ -244,6 +348,15 @@ class AIService {
             icon: 'calendar',
             confidence: entity.confidence,
             metadata: { date: entity.value },
+          });
+          suggestions.push({
+            id: `calendar_${index}`,
+            type: 'open_app',
+            title: 'Open Calendar App',
+            description: 'Add to calendar app',
+            icon: 'calendar-outline',
+            confidence: entity.confidence * 0.9,
+            metadata: { app: 'calendar', date: entity.value },
           });
           break;
 
@@ -257,11 +370,69 @@ class AIService {
             confidence: entity.confidence,
             metadata: { address: entity.value },
           });
+          suggestions.push({
+            id: `googlemaps_${index}`,
+            type: 'open_app',
+            title: 'Open in Google Maps',
+            description: 'Navigate with Google Maps',
+            icon: 'navigate',
+            confidence: entity.confidence * 0.9,
+            metadata: { app: 'google-maps', address: entity.value },
+          });
+          break;
+
+        case 'code':
+          suggestions.push({
+            id: `vscode_${index}`,
+            type: 'open_app',
+            title: 'Open in VS Code',
+            description: 'Edit code in VS Code',
+            icon: 'code-slash',
+            confidence: 0.9,
+            metadata: { app: 'vscode', content: entity.value },
+          });
           break;
       }
     });
 
+    // Add content-type based suggestions
+    const contentSuggestions = this.generateContentTypeSuggestions(entities);
+    suggestions.push(...contentSuggestions);
+
     return suggestions.sort((a, b) => b.confidence - a.confidence);
+  }
+
+  private generateContentTypeSuggestions(entities: DetectedEntity[]): ActionSuggestion[] {
+    const suggestions: ActionSuggestion[] = [];
+    const entityTypes = entities.map(e => e.type);
+
+    // If it looks like code, suggest development tools
+    if (entityTypes.includes('code') || entities.some(e => e.value.includes('function') || e.value.includes('class'))) {
+      suggestions.push({
+        id: 'open_ide',
+        type: 'open_app',
+        title: 'Open in IDE',
+        description: 'Open code in your preferred IDE',
+        icon: 'code-working',
+        confidence: 0.85,
+        metadata: { app: 'ide', contentType: 'code' },
+      });
+    }
+
+    // If it contains multiple contacts, suggest CRM
+    if (entityTypes.filter(t => t === 'email' || t === 'phone').length > 1) {
+      suggestions.push({
+        id: 'add_contacts',
+        type: 'open_app',
+        title: 'Add to Contacts',
+        description: 'Import contacts to address book',
+        icon: 'people',
+        confidence: 0.8,
+        metadata: { app: 'contacts', contentType: 'contact-list' },
+      });
+    }
+
+    return suggestions;
   }
 
   private calculateConfidence(entities: DetectedEntity[], suggestions: ActionSuggestion[]): number {
