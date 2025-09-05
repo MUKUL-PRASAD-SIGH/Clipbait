@@ -78,8 +78,8 @@ app.use(errorHandler);
 // Initialize services
 async function startServer() {
   try {
-    // Skip database for now - TODO: Fix later
-    // await initializeDatabase();
+    await initializeDatabase();
+    // Skip Firebase for now - TODO: Add credentials later
     // await initializeFirebase();
     await aiService.initialize();
     
