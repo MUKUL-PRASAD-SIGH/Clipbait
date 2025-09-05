@@ -8,6 +8,7 @@ use tauri::{
 use std::sync::Mutex;
 use std::thread;
 use std::time::Duration;
+use clipboard::{ClipboardContext, ClipboardProvider};
 
 struct ClipboardState {
     last_content: Mutex<String>,
@@ -16,8 +17,6 @@ struct ClipboardState {
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
 fn get_clipboard_text() -> Result<String, String> {
-    use clipboard::{ClipboardContext, ClipboardProvider};
-    
     let mut ctx: ClipboardContext = ClipboardProvider::new()
         .map_err(|e| format!("Failed to get clipboard context: {}", e))?;
     
@@ -27,8 +26,6 @@ fn get_clipboard_text() -> Result<String, String> {
 
 #[tauri::command]
 fn set_clipboard_text(text: String) -> Result<(), String> {
-    use clipboard::{ClipboardContext, ClipboardProvider};
-    
     let mut ctx: ClipboardContext = ClipboardProvider::new()
         .map_err(|e| format!("Failed to get clipboard context: {}", e))?;
     
@@ -93,17 +90,41 @@ fn start_clipboard_monitor(window: Window) {
     thread::spawn(move || {
         let mut last_content = String::new();
         
+        println!("Starting clipboard monitor...");
+        
         loop {
-            if let Ok(current_content) = get_clipboard_text() {
-                if current_content != last_content && !current_content.is_empty() {
-                    last_content = current_content.clone();
-                    
-                    // Emit clipboard change event to frontend
-                    window.emit("clipboard-changed", &current_content).ok();
+            match ClipboardProvider::new() {
+                Ok(mut ctx) => {
+                    match ctx.get_contents() {
+                        Ok(current_content) => {
+                            if current_content != last_content && !current_content.is_empty() && current_content.trim().len() > 0 {
+                                println!("Clipboard changed: {}", &current_content[..std::cmp::min(50, current_content.len())]);
+                                last_content = current_content.clone();
+                                
+                                // Emit clipboard change event to frontend
+                                if let Err(e) = window.emit("clipboard-changed", &current_content) {
+                                    println!("Failed to emit clipboard event: {}", e);
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            // Don't spam errors, clipboard might be temporarily unavailable
+                            if e.to_string().contains("Empty") {
+                                // Clipboard is empty, that's fine
+                            } else {
+                                println!("Clipboard read error: {}", e);
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    println!("Failed to create clipboard context: {}", e);
+                    thread::sleep(Duration::from_secs(1)); // Wait longer on context creation failure
+                    continue;
                 }
             }
             
-            thread::sleep(Duration::from_millis(500));
+            thread::sleep(Duration::from_millis(1000)); // Check every second
         }
     });
 }

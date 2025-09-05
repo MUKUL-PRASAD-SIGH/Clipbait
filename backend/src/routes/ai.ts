@@ -5,8 +5,8 @@ import { logger } from '../utils/logger';
 
 const router = Router();
 
-// Process clipboard content with AI
-router.post('/process', authenticateUser, async (req: Request, res: Response) => {
+// Process clipboard content with AI (Skip auth for MVP)
+router.post('/process', async (req: Request, res: Response) => {
   try {
     const { content, contentType = 'text' } = req.body;
 
@@ -31,8 +31,8 @@ router.post('/process', authenticateUser, async (req: Request, res: Response) =>
   }
 });
 
-// Get AI suggestions for content
-router.post('/suggestions', authenticateUser, async (req: Request, res: Response) => {
+// Get AI suggestions for content (Skip auth for MVP)
+router.post('/suggestions', async (req: Request, res: Response) => {
   try {
     const { content } = req.body;
 

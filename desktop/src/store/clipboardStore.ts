@@ -38,11 +38,19 @@ export const useClipboardStore = create<ClipboardState>()(
   initialize: async () => {
     set({ isLoading: true });
     try {
-      const items = await clipboardApi.getHistory();
-      set({ items, isLoading: false });
+      // Try to load from API first (for synced history)
+      try {
+        const items = await clipboardApi.getHistory();
+        set({ items, isLoading: false });
+        console.log('Loaded clipboard history from API:', items.length, 'items');
+      } catch (apiError) {
+        console.log('API not available, using local storage only');
+        // API not available, just use local storage (which is handled by persist middleware)
+        set({ isLoading: false });
+      }
     } catch (error) {
       console.error('Failed to initialize clipboard:', error);
-      toast.error('Failed to load clipboard history');
+      // Don't show error toast for initialization - it's expected in offline mode
       set({ isLoading: false });
     }
   },

@@ -4,11 +4,13 @@ import { ClipboardHistory } from './ClipboardHistory';
 import { ActivityFeed } from './ActivityFeed';
 import { SuggestionPanel } from './SuggestionPanel';
 import { Header } from './Header';
+import { UserSettings } from './UserSettings';
 import { useClipboardStore } from '../store/clipboardStore';
 import { Button } from './ui/Button';
 
 export const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'history' | 'activity'>('history');
+  const [showSettings, setShowSettings] = useState(false);
   const { clearHistory, items } = useClipboardStore();
 
   const handleClearHistory = () => {
@@ -55,19 +57,33 @@ export const Dashboard: React.FC = () => {
                 </button>
               </div>
               
-              {/* Clear History Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleClearHistory}
-                className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
-                disabled={items.length === 0}
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                Clear History
-              </Button>
+              {/* Action Buttons */}
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSettings(true)}
+                  className="text-gray-600 border-gray-200 hover:bg-gray-50"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Settings
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearHistory}
+                  className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                  disabled={items.length === 0}
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Clear History
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -84,6 +100,11 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <UserSettings onClose={() => setShowSettings(false)} />
+      )}
     </div>
   );
 };
