@@ -8,11 +8,18 @@ import { AuthPage } from './components/AuthPage';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ClipboardTestPanel } from './components/ClipboardTestPanel';
+import { LiveActionNotification } from './components/LiveActionNotification';
 import { Button } from './components/ui/Button';
 
 function App() {
   const { isAuthenticated, loading, initialize: initAuth } = useAuthStore();
-  const { addClipboardItem, initialize: initClipboard } = useClipboardStore();
+  const { 
+    addClipboardItem, 
+    initialize: initClipboard, 
+    showLiveNotification, 
+    liveNotificationContent, 
+    hideLiveNotification 
+  } = useClipboardStore();
   const [showTestPanel, setShowTestPanel] = useState(true); // For MVP testing
   const [showAuth, setShowAuth] = useState(false);
   const [mvpMode, setMvpMode] = useState(true); // Toggle between MVP and Auth mode
@@ -28,7 +35,9 @@ function App() {
     // Listen for clipboard changes from Tauri
     const unlisten = listen('clipboard-changed', (event: any) => {
       const content = event.payload as string;
-      console.log('Clipboard changed event received:', content.substring(0, 50) + '...');
+      console.log('🔥 CLIPBOARD CHANGED! Showing instant actions for:', content.substring(0, 50) + '...');
+      
+      // Add to clipboard store AND trigger live notification
       addClipboardItem(content);
     });
 
@@ -100,6 +109,15 @@ function App() {
         {/* Authentication Overlay (MVP mode) */}
         {showAuth && mvpMode && (
           <AuthPage onClose={() => setShowAuth(false)} />
+        )}
+
+        {/* LIVE ACTION NOTIFICATION - Shows instantly when you copy something */}
+        {showLiveNotification && liveNotificationContent && (
+          <LiveActionNotification
+            content={liveNotificationContent}
+            onClose={hideLiveNotification}
+            position="top-right"
+          />
         )}
         
         <Dashboard />

@@ -3,7 +3,7 @@
 
 use tauri::{
     CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
-    Window,
+    Window, GlobalShortcutManager,
 };
 use std::sync::Mutex;
 use std::thread;
@@ -95,7 +95,7 @@ fn start_clipboard_monitor(window: Window) {
         loop {
             match ClipboardProvider::new() {
                 Ok(mut ctx) => {
-                    match ctx.get_contents() {
+                    match ctx.get_contents() as Result<String, Box<dyn std::error::Error>> {
                         Ok(current_content) => {
                             if current_content != last_content && !current_content.is_empty() && current_content.trim().len() > 0 {
                                 println!("Clipboard changed: {}", &current_content[..std::cmp::min(50, current_content.len())]);

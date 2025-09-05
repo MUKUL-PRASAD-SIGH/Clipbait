@@ -12,6 +12,8 @@ interface ClipboardState {
   searchQuery: string;
   isOffline: boolean;
   pendingSync: ClipboardItem[];
+  showLiveNotification: boolean;
+  liveNotificationContent: string;
   
   // Actions
   initialize: () => Promise<void>;
@@ -22,6 +24,8 @@ interface ClipboardState {
   executeSuggestion: (suggestion: ActionSuggestion) => Promise<void>;
   syncPendingItems: () => Promise<void>;
   setOfflineStatus: (offline: boolean) => void;
+  hideLiveNotification: () => void;
+  clearHistory: () => void;
 }
 
 export const useClipboardStore = create<ClipboardState>()(
@@ -34,6 +38,8 @@ export const useClipboardStore = create<ClipboardState>()(
       searchQuery: '',
       isOffline: false,
       pendingSync: [],
+      showLiveNotification: false,
+      liveNotificationContent: '',
 
   initialize: async () => {
     set({ isLoading: true });
@@ -76,7 +82,9 @@ export const useClipboardStore = create<ClipboardState>()(
       return {
         items: limitedItems,
         selectedItem: tempItem,
-        suggestions: []
+        suggestions: [],
+        showLiveNotification: true,
+        liveNotificationContent: content
       };
     });
 
@@ -185,6 +193,10 @@ export const useClipboardStore = create<ClipboardState>()(
     if (!offline) {
       get().syncPendingItems();
     }
+  },
+
+  hideLiveNotification: () => {
+    set({ showLiveNotification: false, liveNotificationContent: '' });
   }
     }),
     {

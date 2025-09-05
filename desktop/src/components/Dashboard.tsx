@@ -5,6 +5,7 @@ import { ActivityFeed } from './ActivityFeed';
 import { SuggestionPanel } from './SuggestionPanel';
 import { Header } from './Header';
 import { UserSettings } from './UserSettings';
+import { WebClipboardMonitor } from './WebClipboardMonitor';
 import { useClipboardStore } from '../store/clipboardStore';
 import { Button } from './ui/Button';
 
@@ -90,6 +91,11 @@ export const Dashboard: React.FC = () => {
           {/* Content */}
           <div className="flex-1 flex">
             <div className="flex-1 p-6">
+              {/* Web Clipboard Monitor - Shows at top */}
+              <div className="mb-6">
+                <WebClipboardMonitor />
+              </div>
+              
               {activeTab === 'history' ? <ClipboardHistory /> : <ActivityFeed />}
             </div>
             
