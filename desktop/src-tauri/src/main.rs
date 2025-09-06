@@ -8,29 +8,25 @@ use tauri::{
 use std::sync::Mutex;
 use std::thread;
 use std::time::Duration;
-use clipboard::{ClipboardContext, ClipboardProvider};
+use arboard::{Clipboard, Error};
 
+// A simple state struct to hold the last content of the clipboard.
+// This is necessary because the monitoring thread and the main thread might access it.
 struct ClipboardState {
-    last_content: Mutex<String>,
+    last_content: Mutex<Option<String>>,
 }
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
 fn get_clipboard_text() -> Result<String, String> {
-    let mut ctx: ClipboardContext = ClipboardProvider::new()
-        .map_err(|e| format!("Failed to get clipboard context: {}", e))?;
-    
-    ctx.get_contents()
-        .map_err(|e| format!("Failed to get clipboard contents: {}", e))
+    let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
+    clipboard.get_text().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn set_clipboard_text(text: String) -> Result<(), String> {
-    let mut ctx: ClipboardContext = ClipboardProvider::new()
-        .map_err(|e| format!("Failed to get clipboard context: {}", e))?;
-    
-    ctx.set_contents(text)
-        .map_err(|e| format!("Failed to set clipboard contents: {}", e))
+    let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
+    clipboard.set_text(text).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -86,45 +82,52 @@ fn handle_system_tray_event(app: &tauri::AppHandle, event: SystemTrayEvent) {
     }
 }
 
-fn start_clipboard_monitor(window: Window) {
-    thread::spawn(move || {
-        let mut last_content = String::new();
+// The core clipboard monitor logic
+fn start_clipboard_monitor(app_handle: AppHandle) {
+    // Spawn a new thread to monitor the clipboard, which won't block the main UI thread.
+    tauri::async_runtime::spawn(async move {
+        // We use a new Clipboard instance for this thread, as `arboard` manages its own state
+        let mut clipboard = Clipboard::new().expect("Failed to create clipboard instance.");
+        let mut last_content: Option<String> = None;
         
         println!("Starting clipboard monitor...");
         
         loop {
-            match ClipboardProvider::new() {
-                Ok(mut ctx) => {
-                    match ctx.get_contents() as Result<String, Box<dyn std::error::Error>> {
-                        Ok(current_content) => {
-                            if current_content != last_content && !current_content.is_empty() && current_content.trim().len() > 0 {
-                                println!("Clipboard changed: {}", &current_content[..std::cmp::min(50, current_content.len())]);
-                                last_content = current_content.clone();
-                                
-                                // Emit clipboard change event to frontend
-                                if let Err(e) = window.emit("clipboard-changed", &current_content) {
-                                    println!("Failed to emit clipboard event: {}", e);
-                                }
-                            }
-                        }
-                        Err(e) => {
-                            // Don't spam errors, clipboard might be temporarily unavailable
-                            if e.to_string().contains("Empty") {
-                                // Clipboard is empty, that's fine
-                            } else {
-                                println!("Clipboard read error: {}", e);
-                            }
+            // Get the current content from the clipboard
+            let current_content_result = clipboard.get_text();
+            
+            // Handle the result from the clipboard read operation
+            match current_content_result {
+                Ok(current_content) => {
+                    // Check if content has changed, is not empty, and has more than just whitespace
+                    if last_content.is_some() && current_content != last_content.as_ref().unwrap().to_string() && !current_content.trim().is_empty() {
+                        
+                        println!("Clipboard changed: {}", &current_content[..std::cmp::min(50, current_content.len())]);
+                        
+                        // Update the last known content
+                        last_content = Some(current_content.clone());
+                        
+                        // Emit a Tauri event to the frontend
+                        if let Err(e) = app_handle.emit_all("clipboard-changed", current_content) {
+                            eprintln!("Failed to emit clipboard event: {}", e);
                         }
                     }
+                },
+                // The clipboard could be empty or contain non-UTF8 data (like an image)
+                Err(Error::ContentNotUtf8) => {
+                    // This is a great place to add logic for images later.
+                    // For now, we'll just acknowledge the change.
+                    if let Err(e) = app_handle.emit_all("clipboard-changed", "[Image/Non-Text Content]".to_string()) {
+                        eprintln!("Failed to emit clipboard event for image: {}", e);
+                    }
+                    last_content = Some(String::new()); // Reset last_content to force a check after image
                 }
-                Err(e) => {
-                    println!("Failed to create clipboard context: {}", e);
-                    thread::sleep(Duration::from_secs(1)); // Wait longer on context creation failure
-                    continue;
-                }
+                _ => {} // Ignore other errors for simplicity
             }
             
-            thread::sleep(Duration::from_millis(1000)); // Check every second
+            // Poll every 500 milliseconds (0.5 seconds).
+            // A shorter duration means more responsiveness but higher CPU usage.
+            thread::sleep(Duration::from_millis(500));
         }
     });
 }
@@ -133,23 +136,25 @@ fn main() {
     let system_tray = create_system_tray();
     
     tauri::Builder::default()
+        // Here we manage the last_content, so all threads can access it safely.
         .manage(ClipboardState {
-            last_content: Mutex::new(String::new()),
+            last_content: Mutex::new(None),
         })
         .system_tray(system_tray)
         .on_system_tray_event(handle_system_tray_event)
         .setup(|app| {
-            let window = app.get_window("main").unwrap();
+            let app_handle = app.app_handle();
             
-            // Start clipboard monitoring
-            start_clipboard_monitor(window.clone());
+            // Spawn the clipboard monitor on application startup
+            start_clipboard_monitor(app_handle.clone());
             
             // Register global shortcut
             let mut shortcut_manager = app.global_shortcut_manager();
+            let window_handle = app_handle.get_window("main").unwrap();
             shortcut_manager
                 .register("CmdOrCtrl+Shift+V", move || {
-                    window.show().unwrap();
-                    window.set_focus().unwrap();
+                    window_handle.show().unwrap();
+                    window_handle.set_focus().unwrap();
                 })
                 .unwrap();
             

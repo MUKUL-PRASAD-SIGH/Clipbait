@@ -11,6 +11,13 @@
     "version": "0.1.0"
   },
   "tauri": {
+    "invoke_handler": {
+      "commands": [
+        "get_clipboard_text",
+        "set_clipboard_text",
+        "show_notification"
+      ]
+    },
     "allowlist": {
       "all": false,
       "shell": {
