@@ -1,4 +1,4 @@
-import { ClipboardItem, ActionSuggestion } from '../../../shared/types';
+import { ClipboardItem, ActionSuggestion } from '../types';
 import { getPool } from '../database/connection';
 import { logger } from '../utils/logger';
 

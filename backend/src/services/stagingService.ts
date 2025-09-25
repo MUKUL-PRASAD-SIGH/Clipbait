@@ -1,5 +1,5 @@
 import { getPool } from '../database/connection';
-import { StagingArea, ClipboardItem, SmartPasteFormat } from '../../../shared/types';
+import { ClipboardItem, StagingArea, SmartPasteFormat } from '../types';
 import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -12,7 +12,7 @@ class StagingService {
       userId,
       items: [],
       targetFormat,
-      createdAt: new Date().toISOString()
+      createdAt: new Date()
     };
 
     this.userStagingAreas.set(userId, stagingArea);
