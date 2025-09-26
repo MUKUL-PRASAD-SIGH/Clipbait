@@ -46,3 +46,6 @@ export const authenticateUser = async (
     res.status(401).json({ success: false, error: 'Invalid token' });
   }
 };
+
+// Export as authMiddleware for consistency
+export const authMiddleware = authenticateUser;

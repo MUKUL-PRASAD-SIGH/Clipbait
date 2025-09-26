@@ -12,6 +12,10 @@ import { cleanupService } from './services/cleanupService';
 import { authRoutes } from './routes/auth';
 import { clipboardRoutes } from './routes/clipboard';
 import { aiRoutes } from './routes/ai';
+import { generativeRoutes } from './routes/generative';
+import { collectionsRoutes } from './routes/collections';
+import { stagingRoutes } from './routes/staging';
+import { commandPaletteRoutes } from './routes/commandPalette';
 import { apiLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 
@@ -47,6 +51,10 @@ app.set('io', io);
 app.use('/api/auth', authRoutes);
 app.use('/api/clipboard', clipboardRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/generative', generativeRoutes);
+app.use('/api/collections', collectionsRoutes);
+app.use('/api/staging', stagingRoutes);
+app.use('/api/command-palette', commandPaletteRoutes);
 
 // Health check endpoint
 app.get('/health', (_req: Request, res: Response) => {
@@ -78,9 +86,17 @@ app.use(errorHandler);
 // Initialize services
 async function startServer() {
   try {
-    await initializeDatabase();
-    // Skip Firebase for now - TODO: Add credentials later
-    // await initializeFirebase();
+    // Initialize database only if not skipped
+    if (process.env.SKIP_DATABASE !== 'true') {
+      await initializeDatabase();
+    } else {
+      logger.info('Database initialization skipped (SKIP_DATABASE=true)');
+    }
+    
+    // Initialize Firebase
+    await initializeFirebase();
+    
+    // Initialize AI service
     await aiService.initialize();
     
     // Start cleanup service - Skip for now
@@ -89,6 +105,9 @@ async function startServer() {
     server.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      if (process.env.SKIP_DATABASE === 'true') {
+        logger.info('Running in demo mode without database');
+      }
     });
   } catch (error) {
     logger.error('Failed to start server:', error);

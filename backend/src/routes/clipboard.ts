@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import { authenticateUser } from '../middleware/auth';
 import { getPool } from '../database/connection';
 import { AuthRequest, ApiResponse, ClipboardItem } from '../types';
@@ -16,7 +16,7 @@ router.get('/',
   validatePagination,
   handleValidationErrors,
   authenticateUser, 
-  async (req: AuthRequest, res) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       const { page = 1, limit = 50, search } = req.query;
       const offset = (Number(page) - 1) * Number(limit);
@@ -78,7 +78,7 @@ router.post('/',
   validateClipboardContent,
   handleValidationErrors,
   authenticateUser, 
-  async (req: AuthRequest, res) => {
+  async (req: AuthRequest, res: Response) => {
     const client = await getPool().connect();
     
     try {

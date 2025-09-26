@@ -45,6 +45,8 @@ export const getPool = (): Pool => {
   return pool;
 };
 
+export { pool };
+
 // Graceful shutdown
 export const closeDatabase = async (): Promise<void> => {
   if (pool) {
