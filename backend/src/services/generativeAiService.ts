@@ -1,9 +1,9 @@
 import { OpenAI } from 'openai';
-import { ContentTransformation, ActionSuggestion } from '../../../shared/types';
+import { ActionSuggestion, ActionType, ContentTransformation } from '../types';
 import { logger } from '../utils/logger';
 
 class GenerativeAiService {
-  private openai: OpenAI;
+  private openai!: OpenAI;
   private initialized = false;
 
   constructor() {

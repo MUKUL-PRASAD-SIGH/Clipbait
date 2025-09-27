@@ -171,8 +171,8 @@ router.post('/suggest',
         metadata: { category: 'other' as const, confidence: 1 },
         entities: [],
         suggestions: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
 
       const suggestions = await collectionsService.suggestCollections(userId, mockItem);

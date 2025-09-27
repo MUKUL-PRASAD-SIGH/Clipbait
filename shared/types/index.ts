@@ -67,7 +67,9 @@ export type EntityType =
   | 'url' 
   | 'person' 
   | 'organization' 
-  | 'location';
+  | 'location'
+  | 'credit_card'
+  | 'code';
 
 export type ContentCategory = 
   | 'contact' 
@@ -96,7 +98,8 @@ export type ActionType =
   | 'fix_grammar'
   | 'remove_background'
   | 'enhance_image'
-  | 'smart_paste';
+  | 'smart_paste'
+  | 'open_app';
 
 export interface AIProcessingResult {
   entities: DetectedEntity[];
