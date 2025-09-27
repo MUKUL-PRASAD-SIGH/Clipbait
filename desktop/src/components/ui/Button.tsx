@@ -7,15 +7,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-500 shadow-md hover:shadow-lg hover:-translate-y-0.5',
-        destructive: 'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 shadow-md hover:shadow-lg hover:-translate-y-0.5',
-        success: 'bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-500 shadow-md hover:shadow-lg hover:-translate-y-0.5',
-        warning: 'bg-yellow-500 text-white hover:bg-yellow-600 focus-visible:ring-yellow-500 shadow-md hover:shadow-lg hover:-translate-y-0.5',
-        outline: 'border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus-visible:ring-gray-500 hover:shadow-sm',
-        secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus-visible:ring-gray-500 shadow-sm hover:shadow-md',
-        ghost: 'text-gray-700 hover:bg-gray-100 focus-visible:ring-gray-500 hover:shadow-sm',
-        link: 'text-blue-600 underline-offset-4 hover:underline focus-visible:ring-blue-500',
-        gradient: 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5',
+        default: 'bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-500 shadow-md hover:shadow-lg hover:-translate-y-0.5 dark:bg-blue-500 dark:hover:bg-blue-600',
+        destructive: 'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 shadow-md hover:shadow-lg hover:-translate-y-0.5 dark:bg-red-500 dark:hover:bg-red-600',
+        success: 'bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-500 shadow-md hover:shadow-lg hover:-translate-y-0.5 dark:bg-green-500 dark:hover:bg-green-600',
+        warning: 'bg-yellow-500 text-white hover:bg-yellow-600 focus-visible:ring-yellow-500 shadow-md hover:shadow-lg hover:-translate-y-0.5 dark:bg-yellow-500 dark:hover:bg-yellow-600',
+        outline: 'border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus-visible:ring-gray-500 hover:shadow-sm dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:border-gray-500',
+        secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus-visible:ring-gray-500 shadow-sm hover:shadow-md dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600',
+        ghost: 'text-gray-700 hover:bg-gray-100 focus-visible:ring-gray-500 hover:shadow-sm dark:text-gray-300 dark:hover:bg-gray-800',
+        link: 'text-blue-600 underline-offset-4 hover:underline focus-visible:ring-blue-500 dark:text-blue-400',
+        gradient: 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5 dark:from-blue-500 dark:to-purple-500 dark:hover:from-blue-600 dark:hover:to-purple-600',
       },
       size: {
         xs: 'h-7 px-2 text-xs',

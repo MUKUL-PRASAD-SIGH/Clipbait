@@ -4,9 +4,10 @@ import { useClipboardStore } from '../store/clipboardStore';
 import { Button } from './ui/Button';
 import { Card, CardBadge } from './ui/Card';
 import { UserSettings } from './UserSettings';
+import toast from 'react-hot-toast';
 
 export const UserProfile: React.FC = () => {
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const { items, clearHistory } = useClipboardStore();
   const [showSettings, setShowSettings] = useState(false);
 
@@ -16,6 +17,60 @@ export const UserProfile: React.FC = () => {
     return new Date(item.timestamp).toDateString() === today;
   }).length;
   const storageUsed = items.reduce((acc, item) => acc + item.content.length, 0);
+
+  const handleExportData = () => {
+    try {
+      // Create export data object
+      const exportData = {
+        user: {
+          email: user?.email,
+          displayName: user?.displayName,
+          exportDate: new Date().toISOString(),
+        },
+        clipboardItems: items.map(item => ({
+          id: item.id,
+          content: item.content,
+          timestamp: item.timestamp,
+          entities: item.entities,
+          suggestions: item.suggestions,
+          metadata: item.metadata,
+        })),
+        statistics: {
+          totalItems,
+          todayItems,
+          storageUsed,
+        },
+      };
+
+      // Convert to JSON string
+      const jsonString = JSON.stringify(exportData, null, 2);
+      
+      // Create blob and download
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `epitychia-export-${new Date().toISOString().split('T')[0]}.json`;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up
+      URL.revokeObjectURL(url);
+      
+      toast.success('Data exported successfully!', {
+        icon: '📥',
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast.error('Failed to export data. Please try again.');
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -29,7 +84,7 @@ export const UserProfile: React.FC = () => {
             }
           </span>
         </div>
-        <h2 className="text-lg font-semibold text-gray-900">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-wide uppercase">
           {isAuthenticated ? (user?.displayName || user?.email?.split('@')[0] || 'User') : 'Guest User'}
         </h2>
         <p className="text-sm text-gray-500">
@@ -83,7 +138,7 @@ export const UserProfile: React.FC = () => {
             variant="outline"
             size="sm"
             className="w-full justify-start"
-            onClick={() => {/* TODO: Export functionality */}}
+            onClick={handleExportData}
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -106,35 +161,7 @@ export const UserProfile: React.FC = () => {
         </div>
       </Card>
 
-      {/* Authentication Actions */}
-      {isAuthenticated ? (
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={logout}
-        >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          Sign Out
-        </Button>
-      ) : (
-        <div className="space-y-2">
-          <Button
-            variant="gradient"
-            className="w-full"
-            onClick={() => {/* TODO: Show login */}}
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-            </svg>
-            Sign In
-          </Button>
-          <p className="text-xs text-gray-500 text-center">
-            Sign in to sync across devices
-          </p>
-        </div>
-      )}
+
 
       {/* Settings Modal */}
       {showSettings && (

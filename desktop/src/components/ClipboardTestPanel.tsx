@@ -261,18 +261,18 @@ export const ClipboardTestPanel: React.FC<ClipboardTestPanelProps> = ({
   return (
     <Card 
       variant="glass" 
-      className="w-[420px] max-h-[600px] overflow-hidden shadow-2xl border-2 border-blue-200/50 animate-fade-in-up"
+      className="w-[420px] max-h-[600px] overflow-hidden shadow-2xl border-2 border-blue-200/50 dark:border-blue-700/50 animate-fade-in-up bg-white dark:bg-gray-800"
     >
       <CardHeader bordered className="pb-3">
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle size="sm" className="flex items-center gap-2">
+            <CardTitle size="sm" className="flex items-center gap-2 tracking-wide uppercase">
               🧪 AI Test Panel
               <span className={`text-xs ${getHealthStatusColor()}`}>
                 {getHealthStatusIcon()}
               </span>
             </CardTitle>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 tracking-wide">
               Test AI processing with sample content
             </p>
           </div>
@@ -281,7 +281,7 @@ export const ClipboardTestPanel: React.FC<ClipboardTestPanelProps> = ({
               variant="ghost" 
               size="icon-sm"
               onClick={() => setIsExpanded(false)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
             >
               ➖
             </Button>
@@ -289,7 +289,7 @@ export const ClipboardTestPanel: React.FC<ClipboardTestPanelProps> = ({
               variant="ghost" 
               size="icon-sm"
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
             >
               ✕
             </Button>
@@ -300,7 +300,7 @@ export const ClipboardTestPanel: React.FC<ClipboardTestPanelProps> = ({
       <CardContent className="space-y-4 max-h-[500px] overflow-y-auto">
         {/* Category Filter */}
         <div>
-          <p className="text-xs font-medium text-gray-600 mb-2">Content Categories:</p>
+          <p className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-2 tracking-wide uppercase">Content Categories:</p>
           <div className="flex flex-wrap gap-1">
             {categories.map((category) => (
               <Button
@@ -319,7 +319,7 @@ export const ClipboardTestPanel: React.FC<ClipboardTestPanelProps> = ({
 
         {/* Test Samples */}
         <div>
-          <p className="text-xs font-medium text-gray-600 mb-2">
+          <p className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-2 tracking-wide uppercase">
             Quick Test Samples ({filteredSamples.length}):
           </p>
           <div className="space-y-2 max-h-32 overflow-y-auto">
@@ -348,7 +348,7 @@ export const ClipboardTestPanel: React.FC<ClipboardTestPanelProps> = ({
 
         {/* System Clipboard Test */}
         <div>
-          <p className="text-xs font-medium text-gray-600 mb-2">System Clipboard:</p>
+          <p className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-2 tracking-wide uppercase">System Clipboard:</p>
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -393,7 +393,7 @@ export const ClipboardTestPanel: React.FC<ClipboardTestPanelProps> = ({
         {/* Manual Input */}
         <div>
           <div className="flex justify-between items-center mb-2">
-            <p className="text-xs font-medium text-gray-600">Custom Content:</p>
+            <p className="text-xs font-medium text-gray-600 dark:text-gray-300 tracking-wide uppercase">Custom Content:</p>
             {testContent && (
               <Button
                 variant="ghost"
@@ -435,7 +435,7 @@ export const ClipboardTestPanel: React.FC<ClipboardTestPanelProps> = ({
           {aiResults && (
             <div className="border-t border-gray-200 pt-4 space-y-3">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-gray-700">AI Analysis Results:</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-200 tracking-wide uppercase">AI Analysis Results:</p>
                 {aiResults.fallback && (
                   <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
                     Fallback Mode
@@ -446,7 +446,7 @@ export const ClipboardTestPanel: React.FC<ClipboardTestPanelProps> = ({
               {/* Suggestions */}
               {aiResults.suggestions?.length > 0 && (
                 <div>
-                  <p className="text-xs text-gray-600 mb-2">Suggested Actions:</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 mb-2 tracking-wide uppercase">Suggested Actions:</p>
                   <div className="space-y-2">
                     {aiResults.suggestions.map((suggestion: any, index: number) => (
                       <Button
@@ -475,7 +475,7 @@ export const ClipboardTestPanel: React.FC<ClipboardTestPanelProps> = ({
               {/* Detected Entities */}
               {aiResults.entities?.length > 0 && (
                 <div>
-                  <p className="text-xs text-gray-600 mb-2">Detected Entities:</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 mb-2 tracking-wide uppercase">Detected Entities:</p>
                   <div className="flex flex-wrap gap-1">
                     {aiResults.entities.map((entity: any, index: number) => (
                       <span

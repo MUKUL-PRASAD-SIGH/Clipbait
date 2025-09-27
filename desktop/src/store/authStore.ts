@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { User } from '../types';
-import { authApi } from '../services/api';
 import FirebaseAuthService from '../services/firebaseAuth';
 import toast from 'react-hot-toast';
 import type { User as FirebaseUser } from 'firebase/auth';
@@ -9,7 +8,8 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  
+  loading: boolean; // Alias for isLoading for backward compatibility
+
   // Actions
   initialize: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
@@ -25,23 +25,33 @@ const convertFirebaseUser = (firebaseUser: FirebaseUser): User => ({
   email: firebaseUser.email || '',
   displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
   avatar: firebaseUser.photoURL || undefined,
+  firebaseUid: firebaseUser.uid,
+  preferences: {
+    enableNotifications: true,
+    autoSync: true,
+    maxHistoryItems: 100,
+    enableAI: true,
+  },
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
 });
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
+  loading: false,
 
   initialize: async () => {
-    set({ isLoading: true });
-    
+    set({ isLoading: true, loading: true });
+
     // Set up Firebase auth state listener
     const unsubscribe = FirebaseAuthService.onAuthStateChanged((firebaseUser) => {
       if (firebaseUser) {
         const user = convertFirebaseUser(firebaseUser);
-        set({ user, isAuthenticated: true, isLoading: false });
+        set({ user, isAuthenticated: true, isLoading: false, loading: false });
       } else {
-        set({ user: null, isAuthenticated: false, isLoading: false });
+        set({ user: null, isAuthenticated: false, isLoading: false, loading: false });
       }
     });
 
@@ -103,13 +113,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     try {
+      // Clear local storage first
+      localStorage.removeItem('auth_token');
+      // Clear Firebase auth cache (try common patterns)
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith('firebase:authUser:')) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      // Sign out from Firebase
       await FirebaseAuthService.signOut();
-      localStorage.removeItem('auth_token');
-      set({ user: null, isAuthenticated: false });
+
+      // Force clear state
+      set({ user: null, isAuthenticated: false, isLoading: false, loading: false });
+
+      toast.success('Logged out successfully');
     } catch (error: any) {
+      console.error('Logout error:', error);
+
       // Force logout even if Firebase logout fails
-      localStorage.removeItem('auth_token');
-      set({ user: null, isAuthenticated: false });
+      localStorage.clear(); // Clear all localStorage
+      set({ user: null, isAuthenticated: false, isLoading: false, loading: false });
+
       toast.success('Logged out successfully');
     }
   }

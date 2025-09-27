@@ -1,6 +1,8 @@
 export interface User {
   id: string;
   email: string;
+  displayName?: string;
+  avatar?: string;
   firebaseUid: string;
   preferences: UserPreferences;
   createdAt: string;
@@ -22,9 +24,11 @@ export interface ClipboardItem {
   metadata: ClipboardMetadata;
   entities: DetectedEntity[];
   suggestions: ActionSuggestion[];
+  timestamp: string; // For backward compatibility
   createdAt: string;
   updatedAt: string;
   deviceId?: string;
+  deletedAt?: string; // For recycle bin functionality
 }
 
 export interface ClipboardMetadata {
