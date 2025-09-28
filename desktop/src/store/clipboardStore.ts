@@ -148,7 +148,7 @@ export const useClipboardStore = create<ClipboardStore>()(
         }
       },
 
-      clearHistory: () => {
+      clearHistory: async () => {
         set({ items: [], selectedItem: null, suggestions: [], deletedItems: [] });
         toast.success('Clipboard history and recycle bin cleared');
       },

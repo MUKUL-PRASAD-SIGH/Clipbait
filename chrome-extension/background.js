@@ -222,19 +222,38 @@ async function getClipboardHistory() {
 // Get AI suggestions from your backend
 async function getAISuggestions(content) {
   try {
-    const response = await fetch(`${backendUrl}/api/generative/suggestions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ content })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to get AI suggestions');
+    // Try to get suggestions from backend if authenticated
+    if (authToken) {
+      const response = await fetch(`${backendUrl}/api/generative/suggestions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ content })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data.suggestions) {
+          return result.data.suggestions.map(s => ({
+            id: s.type,
+            label: s.title,
+            icon: s.icon
+          }));
+        }
+      }
     }
     
-    return await response.json();
+    // Fallback suggestions if backend is down or not authenticated
+    return [
+      { id: 'summarize', label: 'Summarize', icon: '📝' },
+      { id: 'professional', label: 'Make Professional', icon: '💼' },
+      { id: 'grammar', label: 'Fix Grammar', icon: '✏️' },
+      { id: 'email', label: 'Generate Email', icon: '📧' },
+      { id: 'tasks', label: 'Create Tasks', icon: '✅' },
+      { id: 'expand', label: 'Expand Idea', icon: '💡' }
+    ];
   } catch (error) {
     console.error('Epitychia: Error getting AI suggestions:', error);
     // Fallback suggestions if backend is down
@@ -244,7 +263,7 @@ async function getAISuggestions(content) {
       { id: 'grammar', label: 'Fix Grammar', icon: '✏️' },
       { id: 'email', label: 'Generate Email', icon: '📧' },
       { id: 'tasks', label: 'Create Tasks', icon: '✅' },
-      { id: 'translate', label: 'Translate', icon: '🌐' }
+      { id: 'expand', label: 'Expand Idea', icon: '💡' }
     ];
   }
 }
@@ -252,26 +271,29 @@ async function getAISuggestions(content) {
 // Apply AI transformation
 async function applyTransformation(content, transformation) {
   try {
-    const response = await fetch(`${backendUrl}/api/generative/${transformation}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ content })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to apply transformation');
+    // Try backend transformation if authenticated
+    if (authToken) {
+      const response = await fetch(`${backendUrl}/api/generative/${transformation}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ content })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data.transformedContent) {
+          return result.data.transformedContent;
+        }
+      }
     }
     
-    const result = await response.json();
-    return result.data.transformedContent;
-  } catch (error) {
-    console.error('Epitychia: Error applying transformation:', error);
-    // Fallback transformations
+    // Fallback transformations if backend fails or not authenticated
     switch(transformation) {
       case 'summarize':
-        return `• ${content.split('.')[0]}.\n• Key points from content.`;
+        return `• ${content.split('.')[0]}.\n• Key points extracted from content.`;
       case 'professional':
         return `Dear Colleague,\n\n${content}\n\nBest regards,`;
       case 'grammar':
@@ -280,10 +302,14 @@ async function applyTransformation(content, transformation) {
         return `Subject: Regarding Your Message\n\nDear Recipient,\n\n${content}\n\nBest regards,`;
       case 'tasks':
         return `TODO:\n• ${content}\n• Follow up on this item`;
-      case 'translate':
-        return `[TRANSLATED] ${content}`;
+      case 'expand':
+        return `${content}\n\nThis concept can be further developed by considering multiple perspectives and exploring related ideas.`;
       default:
         return `[${transformation.toUpperCase()}] ${content}`;
     }
+  } catch (error) {
+    console.error('Epitychia: Error applying transformation:', error);
+    // Return fallback transformation
+    return `[${transformation.toUpperCase()}] ${content}`;
   }
 }

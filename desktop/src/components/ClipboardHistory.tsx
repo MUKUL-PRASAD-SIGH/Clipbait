@@ -10,7 +10,7 @@ export function ClipboardHistory() {
     items, 
     selectedItem, 
     searchQuery, 
-    loading: isLoading, 
+    isLoading, 
     selectItem, 
     deleteItem 
   } = useClipboardStore();
@@ -122,16 +122,11 @@ export function ClipboardHistory() {
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(item.metadata.category)}`}>
                       {item.metadata.category}
                     </span>
-<<<<<<< HEAD
                     <span className="text-xs text-gray-500">
                       {item.createdAt && !isNaN(new Date(item.createdAt).getTime()) 
                         ? formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })
                         : 'Unknown time'
                       }
-=======
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
->>>>>>> 78d39c8c2afd0d1980716634ccf07602e98a2a2b
                     </span>
                   </div>
                   

@@ -30,7 +30,7 @@ function App() {
   const { 
     addClipboardItem, 
     initialize: initClipboard, 
-    isLiveNotificationVisible, 
+    showLiveNotification: isLiveNotificationVisible, 
     liveNotificationContent, 
     hideLiveNotification 
   } = useClipboardStore();
@@ -320,21 +320,14 @@ function App() {
           position={instantAI.position}
         />
 
-<<<<<<< HEAD
         {/* LIVE ACTION NOTIFICATION - Shows instantly when you copy something */}
         {isLiveNotificationVisible && liveNotificationContent && (
-=======
-        {/* LIVE ACTION NOTIFICATION - Disabled to avoid popup interruptions */}
-        {/* 
-        {showLiveNotification && liveNotificationContent && (
->>>>>>> 78d39c8c2afd0d1980716634ccf07602e98a2a2b
           <LiveActionNotification
             content={liveNotificationContent}
             onClose={hideLiveNotification}
             position="top-right"
           />
         )}
-        */}
         
         <Toaster 
           position="top-right" 

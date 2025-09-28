@@ -21,6 +21,11 @@ async function showAIPopup(clipboardContent) {
   // Remove existing popup
   hideAIPopup();
   
+  // Inject CSS if not already injected
+  if (!document.getElementById('epitychia-styles')) {
+    injectStyles();
+  }
+  
   // Create popup element
   aiPopup = document.createElement('div');
   aiPopup.id = 'epitychia-ai-popup';
@@ -184,5 +189,168 @@ function isLikelyPassword(content) {
   return false;
 }
 
+// Inject CSS styles
+function injectStyles() {
+  const styleId = 'epitychia-styles';
+  if (document.getElementById(styleId)) return;
+  
+  const style = document.createElement('style');
+  style.id = styleId;
+  style.textContent = `
+    /* Epitychia AI Popup Styles */
+    .epitychia-popup {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+      background: #ffffff !important;
+      border: 1px solid #e1e5e9 !important;
+      border-radius: 12px !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+      width: 320px !important;
+      max-width: 90vw !important;
+      animation: epitychia-slide-in 0.3s ease-out !important;
+      backdrop-filter: blur(10px) !important;
+      z-index: 999999 !important;
+      position: fixed !important;
+    }
+
+    @keyframes epitychia-slide-in {
+      from {
+        opacity: 0;
+        transform: translateX(100%) scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+    }
+
+    .epitychia-popup-header {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      padding: 16px 20px 12px !important;
+      border-bottom: 1px solid #f0f0f0 !important;
+    }
+
+    .epitychia-popup-title {
+      display: flex !important;
+      align-items: center !important;
+      font-weight: 600 !important;
+      font-size: 14px !important;
+      color: #1a1a1a !important;
+    }
+
+    .epitychia-icon {
+      margin-right: 8px !important;
+      font-size: 16px !important;
+    }
+
+    .epitychia-close-btn {
+      background: none !important;
+      border: none !important;
+      font-size: 18px !important;
+      color: #666 !important;
+      cursor: pointer !important;
+      padding: 4px !important;
+      border-radius: 4px !important;
+      transition: background-color 0.2s !important;
+    }
+
+    .epitychia-close-btn:hover {
+      background-color: #f5f5f5 !important;
+      color: #333 !important;
+    }
+
+    .epitychia-popup-content {
+      padding: 16px 20px 20px !important;
+    }
+
+    .epitychia-clipboard-preview {
+      background: #f8f9fa !important;
+      border: 1px solid #e9ecef !important;
+      border-radius: 6px !important;
+      padding: 12px !important;
+      font-size: 12px !important;
+      color: #495057 !important;
+      margin-bottom: 16px !important;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace !important;
+      line-height: 1.4 !important;
+      max-height: 60px !important;
+      overflow: hidden !important;
+      position: relative !important;
+    }
+
+    .epitychia-suggestions {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 8px !important;
+    }
+
+    .epitychia-suggestion-btn {
+      display: flex !important;
+      align-items: center !important;
+      padding: 12px !important;
+      background: #ffffff !important;
+      border: 1px solid #e1e5e9 !important;
+      border-radius: 8px !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+      font-size: 13px !important;
+      font-weight: 500 !important;
+      color: #374151 !important;
+      text-align: left !important;
+    }
+
+    .epitychia-suggestion-btn:hover {
+      background: #f8fafc !important;
+      border-color: #3b82f6 !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15) !important;
+    }
+
+    .epitychia-suggestion-btn:active {
+      transform: translateY(0) !important;
+    }
+
+    .epitychia-suggestion-btn:disabled {
+      opacity: 0.7 !important;
+      cursor: not-allowed !important;
+      transform: none !important;
+    }
+
+    .epitychia-suggestion-icon {
+      margin-right: 8px !important;
+      font-size: 14px !important;
+      flex-shrink: 0 !important;
+    }
+
+    .epitychia-suggestion-label {
+      flex: 1 !important;
+      line-height: 1.3 !important;
+    }
+
+    .epitychia-loading {
+      animation: epitychia-spin 1s linear infinite !important;
+    }
+
+    @keyframes epitychia-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .epitychia-success {
+      color: #10b981 !important;
+    }
+
+    .epitychia-error {
+      color: #ef4444 !important;
+    }
+  `;
+  
+  document.head.appendChild(style);
+}
+
 // Initialize content script
 console.log('Epitychia: Content script loaded on', window.location.hostname);
+
+// Inject styles immediately
+injectStyles();

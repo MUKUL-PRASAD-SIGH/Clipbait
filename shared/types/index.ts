@@ -29,6 +29,7 @@ export interface ClipboardItem {
   collectionId?: string;
   transformations?: ContentTransformation[];
   stagingGroup?: string;
+  deletedAt?: string; // For recycle bin functionality
 }
 
 export interface ClipboardMetadata {
