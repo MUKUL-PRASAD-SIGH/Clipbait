@@ -282,7 +282,7 @@ export function StagingArea({ isOpen, onClose, onPaste }: StagingAreaProps) {
                   {smartFormats.map((format, index) => (
                     <Button
                       key={index}
-                      variant={selectedFormat === format ? 'primary' : 'outline'}
+                      variant={selectedFormat === format ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setSelectedFormat(format)}
                       className="flex items-center"

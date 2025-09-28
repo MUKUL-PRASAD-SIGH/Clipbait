@@ -201,7 +201,15 @@ export const clipboardApi = {
   },
 
   deleteItem: async (id: string): Promise<void> => {
-    return makeRequest(() => api.delete(`/clipboard/${id}`));
+    console.log('API: Attempting to delete item with id:', id);
+    try {
+      const result = await makeRequest(() => api.delete(`/clipboard/${id}`));
+      console.log('API: Delete successful');
+      return result;
+    } catch (error) {
+      console.error('API: Delete failed:', error);
+      throw error;
+    }
   },
 
   clearHistory: async (): Promise<void> => {
@@ -234,6 +242,14 @@ export const clipboardApi = {
 
   updateItem: async (id: string, updates: Partial<ClipboardItem>): Promise<ClipboardItem> => {
     return makeRequest(() => api.patch(`/clipboard/${id}`, updates));
+  },
+
+  pinItem: async (id: string): Promise<void> => {
+    return makeRequest(() => api.post(`/clipboard/${id}/pin`));
+  },
+
+  unpinItem: async (id: string): Promise<void> => {
+    return makeRequest(() => api.post(`/clipboard/${id}/unpin`));
   },
 };
 

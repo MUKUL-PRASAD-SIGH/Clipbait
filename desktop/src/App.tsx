@@ -1,6 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { Toaster } from 'react-hot-toast';
+import { 
+  MagnifyingGlassIcon, 
+  FolderIcon, 
+  ClipboardDocumentListIcon, 
+  BeakerIcon, 
+  SparklesIcon 
+} from '@heroicons/react/24/outline';
 import { useClipboardStore } from './store/clipboardStore';
 import { useAuthStore } from './store/authStore';
 import { Dashboard } from './components/Dashboard';
@@ -14,9 +21,12 @@ import { CollectionsManager } from './components/CollectionsManager';
 import { StagingArea } from './components/StagingArea';
 import { InstantAIPopup } from './components/InstantAIPopup';
 import { Button } from './components/ui/Button';
+import { ThemeToggle } from './components/ui/ThemeToggle';
+import { useThemeStore } from './store/themeStore';
 
 function App() {
   const { isAuthenticated, loading, initialize: initAuth } = useAuthStore();
+  const { initializeTheme } = useThemeStore();
   const { 
     addClipboardItem, 
     initialize: initClipboard, 
@@ -38,7 +48,10 @@ function App() {
   useEffect(() => {
     // Always initialize auth first
     initAuth();
-  }, [initAuth]);
+    
+    // Initialize theme
+    initializeTheme();
+  }, [initAuth, initializeTheme]);
 
   useEffect(() => {
     // Only initialize clipboard after authentication
@@ -88,12 +101,14 @@ function App() {
   }, [addClipboardItem]);
 
   const handleClipboardChange = (content: string) => {
-    console.log('🔥 CLIPBOARD CHANGED! Showing instant AI popup for:', content.substring(0, 50) + '...');
+    console.log('📋 CLIPBOARD CHANGED:', content.substring(0, 50) + '...');
     
     // Add to clipboard store
     addClipboardItem(content);
     
-    // Show instant AI popup with smart positioning
+    // Instant popup disabled - you can still access suggestions via the Smart Actions panel
+    // To re-enable, uncomment the code below:
+    /*
     const mouseX = window.innerWidth / 2;
     const mouseY = window.innerHeight / 2;
     
@@ -107,6 +122,7 @@ function App() {
     setTimeout(() => {
       setInstantAI(prev => ({ ...prev, visible: false }));
     }, 15000);
+    */
   };
 
   // Global keyboard shortcuts
@@ -136,10 +152,10 @@ function App() {
   if (loading) {
     return (
       <ErrorBoundary>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 transition-all duration-300 flex items-center justify-center">
           <div className="text-center">
             <LoadingSpinner size="lg" variant="primary" />
-            <p className="mt-4 text-gray-600 animate-pulse">Initializing Epitychia...</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-400 animate-pulse">Initializing Epitychia...</p>
           </div>
           <Toaster position="top-right" />
         </div>
@@ -159,14 +175,14 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-300">
         {/* Clean Header Bar */}
-        <div className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-sm border-b border-gray-200 z-40">
+        <div className="fixed top-0 left-0 right-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 z-40">
           <div className="flex items-center justify-between px-6 py-3">
             <div className="flex items-center space-x-4">
-              <h1 className="text-lg font-semibold text-gray-900">Epitychia</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-wider">EPITYCHIA</h1>
               <div className="flex items-center space-x-2">
-                <div className="flex items-center space-x-1 text-xs text-gray-500">
+                <div className="flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-400">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                   <span>AI Monitoring</span>
                 </div>
@@ -176,36 +192,42 @@ function App() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowCommandPalette(true)}
-                  className="text-gray-600 hover:text-gray-900"
+                  className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 flex items-center gap-3"
                 >
-                  🎯 Search
+                  <MagnifyingGlassIcon className="h-4 w-4" />
+                  <span>Search</span>
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowCollections(true)}
-                  className="text-gray-600 hover:text-gray-900"
+                  className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 flex items-center gap-3"
                 >
-                  📁 Collections
+                  <FolderIcon className="h-4 w-4" />
+                  <span>Collections</span>
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowStagingArea(true)}
-                  className="text-gray-600 hover:text-gray-900"
+                  className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 flex items-center gap-3"
                 >
-                  📋 Multi-Paste
+                  <ClipboardDocumentListIcon className="h-4 w-4" />
+                  <span>Multi-Paste</span>
                 </Button>
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              <ThemeToggle />
+
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowTestPanel(!showTestPanel)}
-                className="text-gray-600 hover:text-gray-900"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 flex items-center gap-3"
               >
-                🧪 Test
+                <BeakerIcon className="h-4 w-4" />
+                <span>Test</span>
               </Button>
               <Button
                 variant="ghost"
@@ -215,19 +237,20 @@ function App() {
                   const sampleContent = "Contact John Doe at john.doe@example.com or call (555) 123-4567 for the meeting on Monday at 2 PM.";
                   handleClipboardChange(sampleContent);
                 }}
-                className="text-gray-600 hover:text-gray-900"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 flex items-center gap-3"
               >
-                🤖 Test AI
+                <SparklesIcon className="h-4 w-4" />
+                <span>Test AI</span>
               </Button>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                onClick={() => {
-                  // Logout functionality
-                  localStorage.removeItem('token');
-                  window.location.reload();
+                onClick={async () => {
+                  // Use proper logout from auth store
+                  const { logout } = useAuthStore.getState();
+                  await logout();
                 }}
-                className="text-gray-600 hover:text-gray-900"
+                className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 border-red-300 hover:border-red-400 dark:border-red-600 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
               >
                 Logout
               </Button>
@@ -258,7 +281,7 @@ function App() {
 
         {showCollections && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl mx-4 max-h-[80vh] overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-4xl mx-4 max-h-[80vh] overflow-hidden">
               <div className="p-6">
                 <CollectionsManager
                   onSelectCollection={(collection) => {
@@ -270,7 +293,7 @@ function App() {
                   }}
                 />
               </div>
-              <div className="p-4 border-t border-gray-200 flex justify-end">
+              <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
                 <Button variant="outline" onClick={() => setShowCollections(false)}>
                   Close
                 </Button>
@@ -297,14 +320,21 @@ function App() {
           position={instantAI.position}
         />
 
+<<<<<<< HEAD
         {/* LIVE ACTION NOTIFICATION - Shows instantly when you copy something */}
         {isLiveNotificationVisible && liveNotificationContent && (
+=======
+        {/* LIVE ACTION NOTIFICATION - Disabled to avoid popup interruptions */}
+        {/* 
+        {showLiveNotification && liveNotificationContent && (
+>>>>>>> 78d39c8c2afd0d1980716634ccf07602e98a2a2b
           <LiveActionNotification
             content={liveNotificationContent}
             onClose={hideLiveNotification}
             position="top-right"
           />
         )}
+        */}
         
         <Toaster 
           position="top-right" 

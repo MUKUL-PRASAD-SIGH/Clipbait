@@ -4,10 +4,12 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class', // Enable class-based dark mode
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Bebas Neue', 'Inter', 'system-ui', 'sans-serif'],
+        bebas: ['Bebas Neue', 'cursive'],
       },
     },
   },

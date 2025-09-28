@@ -1,10 +1,36 @@
+/* Tailwind CSS directives - these are processed by the build system */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   html {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Bebas Neue', 'Inter', system-ui, sans-serif;
+    letter-spacing: 0.025em; /* Add slight letter spacing globally */
+  }
+  
+  /* Enhanced letter spacing for different text sizes */
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: 0.05em;
+  }
+  
+  .text-xs, .text-sm {
+    letter-spacing: 0.05em;
+  }
+  
+  .text-base, .text-lg {
+    letter-spacing: 0.025em;
+  }
+  
+  .text-xl, .text-2xl, .text-3xl, .text-4xl {
+    letter-spacing: 0.05em;
+  }
+  
+  /* Button text spacing */
+  button {
+    letter-spacing: 0.05em;
   }
 }
 
@@ -12,7 +38,7 @@
   .btn-primary {
     @apply bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md transition-colors;
   }
-  
+
   .btn-secondary {
     @apply bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-md transition-colors;
   }
@@ -24,14 +50,55 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  @apply bg-gray-100 dark:bg-gray-800;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  @apply bg-gray-300 dark:bg-gray-600;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  @apply bg-gray-400 dark:bg-gray-500;
+}
+
+/* Dark mode transitions */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Manu
+al dark mode styles as fallback */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: #111827;
+  color: #f9fafb;
+}
+
+/* Force dark mode backgrounds */
+.dark .bg-white {
+  background-color: #111827 !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: #1f2937 !important;
+}
+
+.dark .text-gray-900 {
+  color: #f9fafb !important;
+}
+
+.dark .text-gray-700 {
+  color: #d1d5db !important;
+}
+
+.dark .text-gray-600 {
+  color: #9ca3af !important;
+}
+
+.dark .border-gray-200 {
+  border-color: #374151 !important;
 }

@@ -17,6 +17,13 @@
   "devDependencies": {
     "axios": "^1.6.2"
   },
+  "dependencies": {
+    "firebase": "^12.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "keywords": ["clipboard", "ai", "productivity", "tauri", "react", "typescript"],
   "author": "Epitychia Team",
   "license": "MIT"

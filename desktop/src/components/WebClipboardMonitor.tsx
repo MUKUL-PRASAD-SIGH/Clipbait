@@ -70,7 +70,7 @@ export const WebClipboardMonitor: React.FC = () => {
     <>
       <Card className="w-full max-w-md mx-auto mb-4">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 tracking-wide uppercase text-xl font-bold">
             <span className={isMonitoring ? 'animate-pulse' : ''}>
               {isMonitoring ? '👀' : '📋'}
             </span>

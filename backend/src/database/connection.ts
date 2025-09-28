@@ -6,6 +6,7 @@ let pool: Pool;
 
 export const initializeDatabase = async (): Promise<void> => {
   try {
+<<<<<<< HEAD
     if (process.env.SKIP_DATABASE === "true") {
       logger.info("Using memory storage (SKIP_DATABASE=true)");
       memoryStorage.initializeDemoData();
@@ -23,6 +24,9 @@ export const initializeDatabase = async (): Promise<void> => {
       );
     }
 
+=======
+    // First try to connect to the database
+>>>>>>> 78d39c8c2afd0d1980716634ccf07602e98a2a2b
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
       ssl:
@@ -38,9 +42,15 @@ export const initializeDatabase = async (): Promise<void> => {
     });
 
     // Test connection
+<<<<<<< HEAD
     const result = await pool.query("SELECT NOW(), version()");
     logger.info("Database connected successfully");
     logger.info(`PostgreSQL version: ${result.rows[0].version.split(" ")[1]}`);
+=======
+    const result = await pool.query('SELECT NOW(), version()');
+    logger.info('Database connected successfully');
+    logger.info(`PostgreSQL version: ${result.rows[0].version.split(' ')[1]}`);
+>>>>>>> 78d39c8c2afd0d1980716634ccf07602e98a2a2b
 
     // Set up connection event handlers
     pool.on("connect", () => {
@@ -53,8 +63,53 @@ export const initializeDatabase = async (): Promise<void> => {
 
     // Run migrations
     await runMigrations();
+  } catch (error: any) {
+    // If database doesn't exist, try to create it
+    if (error.code === '3D000') {
+      logger.info('Database does not exist, attempting to create it...');
+      await createDatabaseIfNotExists();
+      // Retry connection after creating database
+      return initializeDatabase();
+    } else {
+      logger.error('Database connection failed:', error);
+      throw error;
+    }
+  }
+};
+
+const createDatabaseIfNotExists = async (): Promise<void> => {
+  try {
+    // Connect to postgres database to create our database
+    const dbUrl = process.env.DATABASE_URL!;
+    const postgresUrl = dbUrl.replace('/epitychia', '/postgres');
+
+    const adminPool = new Pool({
+      connectionString: postgresUrl,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    });
+
+    const client = await adminPool.connect();
+
+    try {
+      // Create database if it doesn't exist
+      await client.query('CREATE DATABASE epitychia');
+      logger.info('Database "epitychia" created successfully');
+    } catch (error: any) {
+      if (error.code === '42P04') {
+        logger.info('Database "epitychia" already exists');
+      } else {
+        throw error;
+      }
+    } finally {
+      client.release();
+      await adminPool.end();
+    }
   } catch (error) {
+<<<<<<< HEAD
     logger.error("Database connection failed:", error);
+=======
+    logger.error('Failed to create database:', error);
+>>>>>>> 78d39c8c2afd0d1980716634ccf07602e98a2a2b
     throw error;
   }
 };

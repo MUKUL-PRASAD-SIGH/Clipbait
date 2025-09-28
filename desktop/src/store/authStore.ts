@@ -1,5 +1,10 @@
 import { create } from 'zustand';
+<<<<<<< HEAD
 import { User, ApiResponse } from '../../../shared/types';
+=======
+import { User } from '../types';
+import FirebaseAuthService from '../services/firebaseAuth';
+>>>>>>> 78d39c8c2afd0d1980716634ccf07602e98a2a2b
 import toast from 'react-hot-toast';
 import FirebaseAuthService from '../services/firebaseAuth';
 import apiService, { api } from '../services/api';
@@ -7,9 +12,15 @@ import apiService, { api } from '../services/api';
 interface AuthStore {
   user: User | null;
   isAuthenticated: boolean;
+<<<<<<< HEAD
   loading: boolean;
   error: string | null;
   
+=======
+  isLoading: boolean;
+  loading: boolean; // Alias for isLoading for backward compatibility
+
+>>>>>>> 78d39c8c2afd0d1980716634ccf07602e98a2a2b
   // Actions
   initialize: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
@@ -20,6 +31,7 @@ interface AuthStore {
   updateProfile: (updates: Partial<User>) => Promise<void>;
 }
 
+<<<<<<< HEAD
 export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   isAuthenticated: false,
@@ -34,6 +46,41 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       if (!token) {
         set({ loading: false, isAuthenticated: false });
         return;
+=======
+// Helper function to convert Firebase user to our User type
+const convertFirebaseUser = (firebaseUser: FirebaseUser): User => ({
+  id: firebaseUser.uid,
+  email: firebaseUser.email || '',
+  displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+  avatar: firebaseUser.photoURL || undefined,
+  firebaseUid: firebaseUser.uid,
+  preferences: {
+    enableNotifications: true,
+    autoSync: true,
+    maxHistoryItems: 100,
+    enableAI: true,
+  },
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+});
+
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  isAuthenticated: false,
+  isLoading: false,
+  loading: false,
+
+  initialize: async () => {
+    set({ isLoading: true, loading: true });
+
+    // Set up Firebase auth state listener
+    const unsubscribe = FirebaseAuthService.onAuthStateChanged((firebaseUser) => {
+      if (firebaseUser) {
+        const user = convertFirebaseUser(firebaseUser);
+        set({ user, isAuthenticated: true, isLoading: false, loading: false });
+      } else {
+        set({ user: null, isAuthenticated: false, isLoading: false, loading: false });
+>>>>>>> 78d39c8c2afd0d1980716634ccf07602e98a2a2b
       }
 
       // Verify token and get user info
@@ -225,6 +272,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     set({ loading: true, error: null });
     
     try {
+<<<<<<< HEAD
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('No authentication token');
@@ -257,6 +305,33 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         error: errorMessage 
       });
       toast.error(errorMessage);
+=======
+      // Clear local storage first
+      localStorage.removeItem('auth_token');
+      // Clear Firebase auth cache (try common patterns)
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith('firebase:authUser:')) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      // Sign out from Firebase
+      await FirebaseAuthService.signOut();
+
+      // Force clear state
+      set({ user: null, isAuthenticated: false, isLoading: false, loading: false });
+
+      toast.success('Logged out successfully');
+    } catch (error: any) {
+      console.error('Logout error:', error);
+
+      // Force logout even if Firebase logout fails
+      localStorage.clear(); // Clear all localStorage
+      set({ user: null, isAuthenticated: false, isLoading: false, loading: false });
+
+      toast.success('Logged out successfully');
+>>>>>>> 78d39c8c2afd0d1980716634ccf07602e98a2a2b
     }
   }
 }));

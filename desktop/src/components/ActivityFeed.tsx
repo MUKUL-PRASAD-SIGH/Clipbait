@@ -4,20 +4,17 @@ import { Card } from './ui/Card';
 import { formatDistanceToNow } from 'date-fns';
 
 export const ActivityFeed: React.FC = () => {
-  const { items, activities } = useClipboardStore();
+  const { items } = useClipboardStore();
 
-  // Generate activity feed from clipboard items and actions
-  const recentActivities = [
-    ...items.slice(0, 10).map(item => ({
-      id: item.id,
-      type: 'clipboard' as const,
-      action: 'copied',
-      content: item.content,
-      timestamp: item.timestamp,
-      category: item.type
-    })),
-    ...(activities || [])
-  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  // Generate activity feed from clipboard items
+  const recentActivities = items.slice(0, 10).map(item => ({
+    id: item.id,
+    type: 'clipboard' as const,
+    action: 'copied',
+    content: item.content,
+    timestamp: item.timestamp,
+    category: item.metadata.category
+  })).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   const getActivityIcon = (type: string, category?: string) => {
     switch (type) {

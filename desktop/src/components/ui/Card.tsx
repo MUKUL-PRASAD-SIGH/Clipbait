@@ -214,6 +214,5 @@ export {
   CardContent,
   CardImage,
   CardBadge,
-  cardVariants,
-  type CardProps
+  cardVariants
 };
