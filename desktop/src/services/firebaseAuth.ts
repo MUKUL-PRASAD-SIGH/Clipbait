@@ -126,7 +126,7 @@ export class FirebaseAuthService {
           errorMessage = 'Account has been disabled';
           break;
         case 'auth/too-many-requests':
-          errorMessage = 'Too many failed attempts. Please try again later';
+          errorMessage = 'Too many failed attempts. Please wait a few minutes and try again';
           break;
         default:
           errorMessage = authError.message || 'Sign-in failed';

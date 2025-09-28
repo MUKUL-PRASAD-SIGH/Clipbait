@@ -2,7 +2,14 @@ import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ClipboardItem, User } from '../types';
 
 // API Configuration
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3000/api';
+const getApiUrl = () => {
+  if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+    return (window as any).VITE_API_URL || 'http://localhost:3000/api';
+  }
+  return 'http://localhost:3000/api';
+};
+
+const API_BASE_URL = getApiUrl();
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // Base delay in milliseconds
 
@@ -78,7 +85,7 @@ api.interceptors.request.use(
     }
     
     // Add request timestamp for debugging
-    config.metadata = { startTime: new Date() };
+    (config as any).metadata = { startTime: new Date() };
     
     return config;
   },
@@ -93,7 +100,7 @@ api.interceptors.response.use(
   (response) => {
     // Log response time for debugging
     const endTime = new Date();
-    const startTime = response.config.metadata?.startTime;
+    const startTime = (response.config as any).metadata?.startTime;
     if (startTime) {
       const duration = endTime.getTime() - startTime.getTime();
       console.debug(`API Request to ${response.config.url} took ${duration}ms`);
@@ -453,6 +460,9 @@ export const apiService = {
     AuthenticationError
   }
 };
+
+// Named export for the api instance
+export { api };
 
 // Default export for backward compatibility
 export default apiService;

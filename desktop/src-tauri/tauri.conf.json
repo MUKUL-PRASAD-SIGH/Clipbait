@@ -11,15 +11,12 @@
     "version": "0.1.0"
   },
   "tauri": {
-    "invoke_handler": {
-      "commands": [
-        "get_clipboard_text",
-        "set_clipboard_text",
-        "show_notification"
-      ]
-    },
     "allowlist": {
       "all": false,
+      "http": {
+        "all": true,
+        "request": true
+      },
       "shell": {
         "all": false,
         "open": true
@@ -60,7 +57,7 @@
       ]
     },
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; connect-src 'self' http://localhost:3000 https://accounts.google.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'"
     },
     "windows": [
       {

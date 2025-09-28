@@ -10,7 +10,7 @@ export function ClipboardHistory() {
     items, 
     selectedItem, 
     searchQuery, 
-    isLoading, 
+    loading: isLoading, 
     selectItem, 
     deleteItem 
   } = useClipboardStore();
@@ -98,7 +98,10 @@ export function ClipboardHistory() {
                       {item.metadata.category}
                     </span>
                     <span className="text-xs text-gray-500">
-                      {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
+                      {item.createdAt && !isNaN(new Date(item.createdAt).getTime()) 
+                        ? formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })
+                        : 'Unknown time'
+                      }
                     </span>
                   </div>
                   

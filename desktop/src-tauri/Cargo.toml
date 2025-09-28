@@ -15,7 +15,7 @@ tauri-build = { version = "1.5.0", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.5.4", features = ["clipboard-all", "global-shortcut-all", "notification-all", "shell-open", "system-tray", "window-close", "window-hide", "window-maximize", "window-minimize", "window-show", "window-start-dragging", "window-unmaximize", "window-unminimize"] }
+tauri = { version = "1.5.4", features = [ "http-all", "clipboard-all", "global-shortcut-all", "notification-all", "shell-open", "system-tray", "window-close", "window-hide", "window-maximize", "window-minimize", "window-show", "window-start-dragging", "window-unmaximize", "window-unminimize"] }
 tokio = { version = "1", features = ["full"] }
 arboard = "3.2.0" # Use a more robust clipboard crate
 

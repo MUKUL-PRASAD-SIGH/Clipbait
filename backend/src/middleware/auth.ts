@@ -3,6 +3,7 @@ import { verifyFirebaseToken } from '../services/firebase';
 import { getPool } from '../database/connection';
 import { User, AuthRequest } from '../types';
 import { logger } from '../utils/logger';
+import jwt from 'jsonwebtoken';
 
 export const authenticateUser = async (
   req: AuthRequest,
@@ -17,26 +18,48 @@ export const authenticateUser = async (
     }
 
     const token = authHeader.substring(7);
-    const decodedToken = await verifyFirebaseToken(token);
-
-    // Get or create user
     const pool = getPool();
-    let result = await pool.query(
-      'SELECT * FROM users WHERE firebase_uid = $1',
-      [decodedToken.uid]
-    );
-
     let user: User;
-    if (result.rows.length === 0) {
-      // Create new user
-      const insertResult = await pool.query(
-        'INSERT INTO users (email, firebase_uid) VALUES ($1, $2) RETURNING *',
-        [decodedToken.email, decodedToken.uid]
+
+    try {
+      // Try JWT first (for demo/local auth)
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'demo-secret') as any;
+      
+      const result = await pool.query(
+        'SELECT id, email, firebase_uid, preferences, created_at, updated_at FROM users WHERE id = $1',
+        [decoded.userId]
       );
-      user = insertResult.rows[0];
-      logger.info(`New user created: ${user.email}`);
-    } else {
+
+      if (result.rows.length === 0) {
+        throw new Error('User not found');
+      }
+
       user = result.rows[0];
+    } catch (jwtError) {
+      // If JWT fails, try Firebase token
+      try {
+        const decodedToken = await verifyFirebaseToken(token);
+
+        // Get or create user
+        let result = await pool.query(
+          'SELECT * FROM users WHERE firebase_uid = $1',
+          [decodedToken.uid]
+        );
+
+        if (result.rows.length === 0) {
+          // Create new user
+          const insertResult = await pool.query(
+            'INSERT INTO users (email, firebase_uid) VALUES ($1, $2) RETURNING *',
+            [decodedToken.email, decodedToken.uid]
+          );
+          user = insertResult.rows[0];
+          logger.info(`New user created: ${user.email}`);
+        } else {
+          user = result.rows[0];
+        }
+      } catch (firebaseError) {
+        throw new Error('Invalid token format');
+      }
     }
 
     req.user = user;

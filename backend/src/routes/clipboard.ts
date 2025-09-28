@@ -217,8 +217,72 @@ router.delete('/:id',
   }
 );
 
+// Pin clipboard item
+router.post('/:id/pin', 
+  apiLimiter,
+  authenticateUser, 
+  async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const pool = getPool();
+      
+      const result = await pool.query(
+        'UPDATE clipboard_items SET is_pinned = true, updated_at = NOW() WHERE id = $1 AND user_id = $2 RETURNING *',
+        [id, req.user!.id]
+      );
+
+      if (result.rows.length === 0) {
+        res.status(404).json({ success: false, error: 'Clipboard item not found' });
+        return;
+      }
+
+      const response: ApiResponse<ClipboardItem> = {
+        success: true,
+        data: result.rows[0],
+        message: 'Item pinned successfully',
+      };
+      res.json(response);
+    } catch (error) {
+      logger.error('Failed to pin clipboard item:', error);
+      res.status(500).json({ success: false, error: 'Failed to pin clipboard item' });
+    }
+  }
+);
+
+// Unpin clipboard item
+router.post('/:id/unpin', 
+  apiLimiter,
+  authenticateUser, 
+  async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const pool = getPool();
+      
+      const result = await pool.query(
+        'UPDATE clipboard_items SET is_pinned = false, updated_at = NOW() WHERE id = $1 AND user_id = $2 RETURNING *',
+        [id, req.user!.id]
+      );
+
+      if (result.rows.length === 0) {
+        res.status(404).json({ success: false, error: 'Clipboard item not found' });
+        return;
+      }
+
+      const response: ApiResponse<ClipboardItem> = {
+        success: true,
+        data: result.rows[0],
+        message: 'Item unpinned successfully',
+      };
+      res.json(response);
+    } catch (error) {
+      logger.error('Failed to unpin clipboard item:', error);
+      res.status(500).json({ success: false, error: 'Failed to unpin clipboard item' });
+    }
+  }
+);
+
 // Clear all clipboard history
-router.delete('/', 
+router.delete('/clear', 
   apiLimiter,
   authenticateUser, 
   async (req: AuthRequest, res) => {

@@ -1,43 +1,23 @@
 {
-  "name": "epitychia",
+  "name": "epitychia-full-stack",
   "version": "1.0.0",
-  "description": "Smart clipboard application with AI-powered suggestions",
-  "private": true,
-  "workspaces": [
-    "backend",
-    "desktop",
-    "mobile",
-    "shared"
-  ],
+  "description": "Epitychia Smart Clipboard - Full Stack Application",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:desktop\"",
-    "dev:backend": "cd backend && npm run dev",
-    "dev:desktop": "cd desktop && npm run tauri dev",
-    "dev:mobile": "cd mobile && npm start",
-    "build": "npm run build:backend && npm run build:desktop && npm run build:mobile",
-    "build:backend": "cd backend && npm run build",
-    "build:desktop": "cd desktop && npm run tauri build",
-    "build:mobile": "cd mobile && npm run build",
-    "test": "npm run test:backend && npm run test:desktop && npm run test:mobile",
-    "test:backend": "cd backend && npm test",
-    "test:desktop": "cd desktop && npm test",
-    "test:mobile": "cd mobile && npm test",
-    "lint": "npm run lint:backend && npm run lint:desktop && npm run lint:mobile",
-    "lint:backend": "cd backend && npm run lint",
-    "lint:desktop": "cd desktop && npm run lint",
-    "lint:mobile": "cd mobile && npm run lint",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "setup": "npm install && npm run setup:backend && npm run setup:desktop && npm run setup:mobile",
-    "setup:backend": "cd backend && npm install",
-    "setup:desktop": "cd desktop && npm install",
-    "setup:mobile": "cd mobile && npm install"
+    "test": "node test-functionality.js",
+    "check": "node check-backend.js",
+    "setup:db": "node setup-database.js",
+    "install:all": "cd backend && npm install && cd ../desktop && npm install",
+    "dev": "node start-all.js",
+    "dev:backend": "node start-backend.js",
+    "dev:desktop": "cd desktop && npm run dev",
+    "build:all": "cd backend && npm run build && cd ../desktop && npm run build",
+    "start:backend": "cd backend && npm start",
+    "start:desktop": "cd desktop && npm run preview"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "axios": "^1.6.2"
   },
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
-  }
+  "keywords": ["clipboard", "ai", "productivity", "tauri", "react", "typescript"],
+  "author": "Epitychia Team",
+  "license": "MIT"
 }

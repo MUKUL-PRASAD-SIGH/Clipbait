@@ -34,7 +34,7 @@ export const config = {
     },
     auth: {
       windowMs: 15 * 60 * 1000, // 15 minutes
-      max: process.env.NODE_ENV === 'test' ? 50 : 5,
+      max: process.env.NODE_ENV === 'test' ? 50 : (process.env.NODE_ENV === 'development' ? 50 : 5),
     },
   },
   
@@ -67,9 +67,13 @@ export const config = {
 
 // Validate required environment variables
 const requiredEnvVars = [
-  'DATABASE_URL',
   'JWT_SECRET',
 ];
+
+// Only require DATABASE_URL if not skipping database
+if (process.env.SKIP_DATABASE !== 'true') {
+  requiredEnvVars.push('DATABASE_URL');
+}
 
 if (config.isProduction) {
   requiredEnvVars.push(

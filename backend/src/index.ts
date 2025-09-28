@@ -25,7 +25,11 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3001",
+    origin: [
+      process.env.FRONTEND_URL || "http://localhost:3001",
+      "http://localhost:1420", // Tauri dev server
+      "tauri://localhost" // Tauri production
+    ],
     methods: ["GET", "POST"]
   }
 });
@@ -35,7 +39,11 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3001",
+  origin: [
+    process.env.FRONTEND_URL || "http://localhost:3001",
+    "http://localhost:1420", // Tauri dev server
+    "tauri://localhost" // Tauri production
+  ],
   credentials: true
 }));
 app.use(express.json({ limit: '1mb' })); // Reduced limit for security
@@ -86,12 +94,8 @@ app.use(errorHandler);
 // Initialize services
 async function startServer() {
   try {
-    // Initialize database only if not skipped
-    if (process.env.SKIP_DATABASE !== 'true') {
-      await initializeDatabase();
-    } else {
-      logger.info('Database initialization skipped (SKIP_DATABASE=true)');
-    }
+    // Initialize database (will use memory storage if SKIP_DATABASE=true)
+    await initializeDatabase();
     
     // Initialize Firebase
     await initializeFirebase();

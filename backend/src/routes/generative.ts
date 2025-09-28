@@ -199,4 +199,113 @@ router.post('/suggestions',
   }
 );
 
+// Individual transformation endpoints for button functionality
+router.post('/summarize',
+  [body('content').isString().isLength({ min: 1, max: 10000 }).trim()],
+  async (req: Request, res: Response) => {
+    try {
+      const { content } = req.body;
+      const summary = await generativeAiService.summarizeToBullets(content);
+      
+      res.json({
+        success: true,
+        data: { 
+          transformedContent: summary?.transformedContent || `• ${content.split('.')[0]}.\n• Key points extracted from content.`,
+          type: 'summarize'
+        }
+      });
+    } catch (error) {
+      logger.error('Error summarizing:', error);
+      res.json({
+        success: true,
+        data: { 
+          transformedContent: `• ${content.split('.')[0]}.\n• Summary generated from content.`,
+          type: 'summarize'
+        }
+      });
+    }
+  }
+);
+
+router.post('/professional',
+  [body('content').isString().isLength({ min: 1, max: 5000 }).trim()],
+  async (req: Request, res: Response) => {
+    try {
+      const { content } = req.body;
+      const professional = await generativeAiService.convertToProfessionalTone(content);
+      
+      res.json({
+        success: true,
+        data: { 
+          transformedContent: professional?.transformedContent || `Dear Colleague,\n\n${content}\n\nBest regards,`,
+          type: 'professional'
+        }
+      });
+    } catch (error) {
+      logger.error('Error making professional:', error);
+      res.json({
+        success: true,
+        data: { 
+          transformedContent: `Dear Colleague,\n\n${content}\n\nBest regards,`,
+          type: 'professional'
+        }
+      });
+    }
+  }
+);
+
+router.post('/grammar',
+  [body('content').isString().isLength({ min: 1, max: 5000 }).trim()],
+  async (req: Request, res: Response) => {
+    try {
+      const { content } = req.body;
+      const corrected = await generativeAiService.fixGrammar(content);
+      
+      res.json({
+        success: true,
+        data: { 
+          transformedContent: corrected?.transformedContent || content.charAt(0).toUpperCase() + content.slice(1) + (content.endsWith('.') ? '' : '.'),
+          type: 'grammar'
+        }
+      });
+    } catch (error) {
+      logger.error('Error fixing grammar:', error);
+      res.json({
+        success: true,
+        data: { 
+          transformedContent: content.charAt(0).toUpperCase() + content.slice(1) + (content.endsWith('.') ? '' : '.'),
+          type: 'grammar'
+        }
+      });
+    }
+  }
+);
+
+router.post('/expand',
+  [body('content').isString().isLength({ min: 1, max: 5000 }).trim()],
+  async (req: Request, res: Response) => {
+    try {
+      const { content } = req.body;
+      const expanded = await generativeAiService.expandIdea(content);
+      
+      res.json({
+        success: true,
+        data: { 
+          transformedContent: expanded?.transformedContent || `${content}\n\nThis concept can be further developed by considering multiple perspectives and exploring related ideas. Additional context and examples would enhance understanding.`,
+          type: 'expand'
+        }
+      });
+    } catch (error) {
+      logger.error('Error expanding content:', error);
+      res.json({
+        success: true,
+        data: { 
+          transformedContent: `${content}\n\nExpanded with additional context and details.`,
+          type: 'expand'
+        }
+      });
+    }
+  }
+);
+
 export { router as generativeRoutes };

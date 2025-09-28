@@ -1,5 +1,5 @@
 import { OpenAI } from 'openai';
-import { ActionSuggestion, ActionType, ContentTransformation } from '../types';
+import { ActionSuggestion, ActionType, ContentTransformation, DetectedEntity, ContentCategory, AIProcessingResult } from '../types';
 import { logger } from '../utils/logger';
 
 class GenerativeAiService {
@@ -15,7 +15,106 @@ class GenerativeAiService {
     }
   }
 
-  async generateTransformations(content: string, contentType: string): Promise<ContentTransformation[]> {
+  async processContent(content: string): Promise<AIProcessingResult> {
+    const entities = this.extractEntities(content);
+    const category = this.categorizeContent(content, entities);
+    const transformations = await this.generateTransformations(content);
+    const suggestions = await this.generateActionSuggestions(content, transformations);
+    
+    return {
+      entities,
+      category,
+      suggestions,
+      confidence: 0.8
+    };
+  }
+
+  extractEntities(content: string): DetectedEntity[] {
+    const entities: DetectedEntity[] = [];
+    
+    // Email detection
+    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+    let match;
+    while ((match = emailRegex.exec(content)) !== null) {
+      entities.push({
+        type: 'email',
+        value: match[0],
+        confidence: 0.9,
+        startIndex: match.index,
+        endIndex: match.index + match[0].length
+      });
+    }
+
+    // Phone detection
+    const phoneRegex = /(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/g;
+    while ((match = phoneRegex.exec(content)) !== null) {
+      entities.push({
+        type: 'phone',
+        value: match[0],
+        confidence: 0.8,
+        startIndex: match.index,
+        endIndex: match.index + match[0].length
+      });
+    }
+
+    // URL detection
+    const urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g;
+    while ((match = urlRegex.exec(content)) !== null) {
+      entities.push({
+        type: 'url',
+        value: match[0],
+        confidence: 0.9,
+        startIndex: match.index,
+        endIndex: match.index + match[0].length
+      });
+    }
+
+    // Address detection
+    const addressRegex = /\d+\s+[A-Za-z\s]+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Place|Pl)/gi;
+    while ((match = addressRegex.exec(content)) !== null) {
+      entities.push({
+        type: 'address',
+        value: match[0],
+        confidence: 0.7,
+        startIndex: match.index,
+        endIndex: match.index + match[0].length
+      });
+    }
+
+    return entities;
+  }
+
+  categorizeContent(content: string, entities: DetectedEntity[]): ContentCategory {
+    const hasEmail = entities.some(e => e.type === 'email');
+    const hasPhone = entities.some(e => e.type === 'phone');
+    const hasAddress = entities.some(e => e.type === 'address');
+    const hasUrl = entities.some(e => e.type === 'url');
+
+    // Code detection
+    if (content.includes('function') || content.includes('const ') || content.includes('import ') || 
+        content.includes('class ') || content.includes('def ') || content.includes('<?php')) {
+      return 'code';
+    }
+
+    // Contact info
+    if (hasEmail && hasPhone) {
+      return 'contact';
+    }
+
+    // Location
+    if (hasAddress) {
+      return 'location';
+    }
+
+    // Document
+    if (content.length > 200 && !hasUrl) {
+      return 'document';
+    }
+
+    return 'other';
+  }
+
+  async generateTransformations(content: string): Promise<ContentTransformation[]> {
     if (!this.initialized) {
       return [];
     }
@@ -102,7 +201,7 @@ class GenerativeAiService {
     return response.choices[0]?.message?.content || '';
   }
 
-  private async summarizeToBullets(content: string): Promise<ContentTransformation | null> {
+  async summarizeToBullets(content: string): Promise<ContentTransformation | null> {
     if (content.length < 100) return null; // Too short to summarize
 
     const prompt = `Summarize this content into clear bullet points:
@@ -130,7 +229,7 @@ class GenerativeAiService {
     };
   }
 
-  private async convertToProfessionalTone(content: string): Promise<ContentTransformation | null> {
+  async convertToProfessionalTone(content: string): Promise<ContentTransformation | null> {
     const prompt = `Rewrite this content in a professional, business-appropriate tone:
     "${content}"
     
@@ -156,7 +255,7 @@ class GenerativeAiService {
     };
   }
 
-  private async expandIdea(content: string): Promise<ContentTransformation | null> {
+  async expandIdea(content: string): Promise<ContentTransformation | null> {
     if (content.length > 500) return null; // Already detailed enough
 
     const prompt = `Expand on this idea with more detail and context:
@@ -184,7 +283,7 @@ class GenerativeAiService {
     };
   }
 
-  private async fixGrammar(content: string): Promise<ContentTransformation | null> {
+  async fixGrammar(content: string): Promise<ContentTransformation | null> {
     const prompt = `Fix any grammar, spelling, or punctuation errors in this text:
     "${content}"
     

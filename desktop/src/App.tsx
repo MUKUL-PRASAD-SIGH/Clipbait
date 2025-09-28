@@ -20,7 +20,7 @@ function App() {
   const { 
     addClipboardItem, 
     initialize: initClipboard, 
-    showLiveNotification, 
+    isLiveNotificationVisible, 
     liveNotificationContent, 
     hideLiveNotification 
   } = useClipboardStore();
@@ -298,7 +298,7 @@ function App() {
         />
 
         {/* LIVE ACTION NOTIFICATION - Shows instantly when you copy something */}
-        {showLiveNotification && liveNotificationContent && (
+        {isLiveNotificationVisible && liveNotificationContent && (
           <LiveActionNotification
             content={liveNotificationContent}
             onClose={hideLiveNotification}
