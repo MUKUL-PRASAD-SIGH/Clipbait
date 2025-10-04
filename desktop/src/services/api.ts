@@ -79,7 +79,7 @@ const api = axios.create({
 // Request Interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -113,7 +113,7 @@ api.interceptors.response.use(
     
     // Handle different error types
     if (error.response?.status === 401) {
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem('token');
       throw new AuthenticationError(errorMessage);
     }
     
@@ -176,7 +176,7 @@ export const authApi = {
     try {
       await makeRequest(() => api.post('/auth/logout'));
     } finally {
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem('token');
     }
   },
 };
@@ -184,11 +184,26 @@ export const authApi = {
 // Clipboard API
 export const clipboardApi = {
   getHistory: async (limit?: number, offset?: number): Promise<ClipboardItem[]> => {
-    const params = new URLSearchParams();
-    if (limit) params.append('limit', limit.toString());
-    if (offset) params.append('offset', offset.toString());
-    
-    return makeRequest(() => api.get(`/clipboard/history?${params.toString()}`));
+    try {
+      const params = new URLSearchParams();
+      if (limit) params.append('limit', limit.toString());
+      if (offset) params.append('offset', offset.toString());
+      
+      const result = await makeRequest(() => api.get(`/clipboard/history?${params.toString()}`));
+      
+      // Ensure we always return an array
+      if (Array.isArray(result)) {
+        return result;
+      } else if (result && typeof result === 'object' && Array.isArray((result as any).data)) {
+        return (result as any).data;
+      } else {
+        console.warn('API returned non-array data for clipboard history:', result);
+        return [];
+      }
+    } catch (error) {
+      console.log('Clipboard API not available, returning empty array');
+      return [];
+    }
   },
 
   addItem: async (content: string, contentType: string = 'text'): Promise<ClipboardItem> => {

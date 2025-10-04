@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { logger } from './utils/logger';
-import { initializeDatabase } from './database/connection';
+import { initializeDatabase } from './database/simple-connection';
 import { initializeFirebase } from './services/firebase';
 import { aiService } from './services/aiService';
 import { cleanupService } from './services/cleanupService';
@@ -28,7 +28,9 @@ const io = new Server(server, {
     origin: [
       process.env.FRONTEND_URL || "http://localhost:3001",
       "http://localhost:1420", // Tauri dev server
-      "tauri://localhost" // Tauri production
+      "tauri://localhost", // Tauri production
+      /^chrome-extension:\/\/.*$/, // Chrome extensions
+      /^moz-extension:\/\/.*$/ // Firefox extensions
     ],
     methods: ["GET", "POST"]
   }
@@ -42,7 +44,9 @@ app.use(cors({
   origin: [
     process.env.FRONTEND_URL || "http://localhost:3001",
     "http://localhost:1420", // Tauri dev server
-    "tauri://localhost" // Tauri production
+    "tauri://localhost", // Tauri production
+    /^chrome-extension:\/\/.*$/, // Chrome extensions
+    /^moz-extension:\/\/.*$/ // Firefox extensions
   ],
   credentials: true
 }));

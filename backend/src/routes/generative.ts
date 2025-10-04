@@ -9,7 +9,88 @@ const router = Router();
 // Apply authentication to all routes
 router.use(authMiddleware);
 
-// Generate content transformations
+// Single transformation endpoint for Chrome extension
+router.post('/transform',
+  [
+    body('content').isString().isLength({ min: 1, max: 10000 }).trim(),
+    body('transformationType').isString().trim(),
+    body('context').isString().optional()
+  ],
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+
+      const { content, transformationType, context } = req.body;
+      console.log('🤖 Transform request:', transformationType, 'for content length:', content.length);
+      
+      let transformedContent = '';
+      
+      switch (transformationType) {
+        case 'summarize':
+          const summary = await generativeAiService.summarizeToBullets(content);
+          transformedContent = summary?.transformedContent || `• ${content.split('.')[0]}.\n• Key points from content.`;
+          break;
+          
+        case 'professional':
+          const professional = await generativeAiService.convertToProfessionalTone(content);
+          transformedContent = professional?.transformedContent || `Dear Colleague,\n\n${content}\n\nBest regards`;
+          break;
+          
+        case 'casual':
+          transformedContent = `Hey! ${content.toLowerCase()} 😊`;
+          break;
+          
+        case 'bullet_points':
+          const sentences = content.split(/[.!?]+/).filter((s: string) => s.trim().length > 0);
+          transformedContent = sentences.map((s: string) => `• ${s.trim()}`).join('\n');
+          break;
+          
+        case 'expand':
+          const expanded = await generativeAiService.expandIdea(content);
+          transformedContent = expanded?.transformedContent || `${content}\n\nExpanded with additional context and details.`;
+          break;
+          
+        case 'grammar':
+          const corrected = await generativeAiService.fixGrammar(content);
+          transformedContent = corrected?.transformedContent || content;
+          break;
+          
+        default:
+          transformedContent = content;
+      }
+
+      console.log('🤖 Transform result length:', transformedContent.length);
+
+      res.json({
+        success: true,
+        data: {
+          id: `transform_${Date.now()}`,
+          clipboardItemId: `clip_${Date.now()}`,
+          transformationType,
+          originalContent: content,
+          transformedContent,
+          createdAt: new Date(),
+          context
+        }
+      });
+    } catch (error) {
+      logger.error('Error in transform endpoint:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to transform content'
+      });
+    }
+  }
+);
+
+// Generate content transformations (legacy endpoint)
 router.post('/transform',
   [
     body('content').isString().isLength({ min: 1, max: 10000 }).trim(),
@@ -28,7 +109,7 @@ router.post('/transform',
       }
 
       const { content, contentType = 'text' } = req.body;
-      const transformations = await generativeAiService.generateTransformations(content, contentType);
+      const transformations = await generativeAiService.generateTransformations(content);
 
       res.json({
         success: true,
@@ -176,7 +257,7 @@ router.post('/suggestions',
       const { content, contentType = 'text' } = req.body;
       
       // Generate transformations first
-      const transformations = await generativeAiService.generateTransformations(content, contentType);
+      const transformations = await generativeAiService.generateTransformations(content);
       
       // Generate action suggestions based on content and transformations
       const suggestions = await generativeAiService.generateActionSuggestions(content, transformations);
@@ -219,7 +300,7 @@ router.post('/summarize',
       res.json({
         success: true,
         data: { 
-          transformedContent: `• ${content.split('.')[0]}.\n• Summary generated from content.`,
+          transformedContent: `• ${req.body.content.split('.')[0]}.\n• Summary generated from content.`,
           type: 'summarize'
         }
       });
@@ -246,7 +327,7 @@ router.post('/professional',
       res.json({
         success: true,
         data: { 
-          transformedContent: `Dear Colleague,\n\n${content}\n\nBest regards,`,
+          transformedContent: `Dear Colleague,\n\n${req.body.content}\n\nBest regards,`,
           type: 'professional'
         }
       });
@@ -273,7 +354,7 @@ router.post('/grammar',
       res.json({
         success: true,
         data: { 
-          transformedContent: content.charAt(0).toUpperCase() + content.slice(1) + (content.endsWith('.') ? '' : '.'),
+          transformedContent: req.body.content.charAt(0).toUpperCase() + req.body.content.slice(1) + (req.body.content.endsWith('.') ? '' : '.'),
           type: 'grammar'
         }
       });
@@ -300,7 +381,7 @@ router.post('/expand',
       res.json({
         success: true,
         data: { 
-          transformedContent: `${content}\n\nExpanded with additional context and details.`,
+          transformedContent: `${req.body.content}\n\nExpanded with additional context and details.`,
           type: 'expand'
         }
       });

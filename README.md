@@ -1,389 +1,208 @@
-# 🚀 Epitychia - Smart Clipboard Manager
+# 🎯 Epitychia - AI-Powered Smart Clipboard
 
-**Epitychia** is an intelligent clipboard management system that automatically detects when you copy content and provides AI-powered suggestions for actions you can take with that content.
+**Epitychia** is an intelligent clipboard management system that automatically captures your copied text and provides AI-powered transformations like summarization, grammar fixes, professional rewrites, and more. Available as both a desktop app and Chrome extension.
 
-## 🚨 **PRODUCTION STATUS - HONEST ASSESSMENT**
+## ✨ Key Features
 
-### ✅ **WORKING FEATURES (Production Ready)**
-- ✅ **Firebase Authentication** - Complete Google OAuth integration
-- ✅ **Basic Clipboard History** - Stores and displays copied items
-- ✅ **Instant AI Popup** - Appears when content is copied (web polling mode)
-- ✅ **Smart Content Detection** - Detects emails, phones, URLs, addresses
-- ✅ **Manual Actions** - Open links, send emails, make calls, view maps
-- ✅ **Clean UI** - Professional header, organized navigation
-- ✅ **Web Compatibility** - Runs in browser with clipboard polling
+- **Smart Clipboard Monitoring** - Automatically captures and stores everything you copy
+- **AI Text Transformations** - Instantly improve, summarize, or rewrite your text with AI
+- **Cross-Platform Sync** - Access your clipboard history across desktop and browser
+- **Instant AI Popup** - Get AI suggestions the moment you copy text in your browser
+- **Secure Storage** - All your data is stored locally with optional cloud sync
 
-### ⚠️ **PARTIALLY WORKING (Needs Backend)**
-- ⚠️ **AI Transformations** - Frontend ready, backend needs OpenAI setup
-- ⚠️ **Collections System** - UI complete, database not connected
-- ⚠️ **Command Palette** - Frontend ready, search needs backend
-- ⚠️ **Staging Area** - UI complete, smart paste needs backend
-- ⚠️ **Cross-device Sync** - Architecture ready, sync not implemented
+## 🚀 Quick Start Guide
 
-### ❌ **NOT WORKING (Major Work Required)**
-- ❌ **Native Clipboard Monitoring** - Tauri integration incomplete
-- ❌ **Real AI Processing** - OpenAI integration not functional
-- ❌ **Mobile App** - React Native app not tested/deployed
-- ❌ **System Tray** - Desktop integration not implemented
-- ❌ **Global Hotkeys** - System-wide shortcuts not working
-- ❌ **Push Notifications** - No notification system
-- ❌ **Data Persistence** - No real data storage
-- ❌ **User Preferences** - Settings not saved
-- ❌ **Offline Mode** - No offline functionality
+### Prerequisites
 
-## 🏗️ Architecture
+Before you begin, make sure you have these installed on your computer:
 
-```
-epitychia/
-├── desktop/          # Tauri desktop app (React + TypeScript + Rust)
-├── mobile/           # React Native mobile app
-├── backend/          # Node.js API server (Express + TypeScript)
-├── shared/           # Shared TypeScript types
-└── docs/             # Documentation
-```
+1. **Node.js** (version 16 or higher) - [Download here](https://nodejs.org/)
+2. **Git** - [Download here](https://git-scm.com/)
+3. **Google Chrome** browser
 
-## 🛠️ Tech Stack
-
-### Desktop App
-
-- **Framework**: Tauri (Rust + React)
-- **Frontend**: React 18 + TypeScript + Vite
-- **State Management**: Zustand
-- **Styling**: CSS3 + Custom Design System
-- **Authentication**: Firebase Auth
-
-### Mobile App
-
-- **Framework**: React Native + TypeScript
-- **State Management**: Zustand
-- **Authentication**: Firebase Auth
-
-### Backend
-
-- **Runtime**: Node.js + Express.js
-- **Language**: TypeScript
-- **Database**: PostgreSQL
-- **Authentication**: Firebase Admin SDK
-- **AI Integration**: OpenAI/Custom AI Service
-
-## 📋 Prerequisites
-
-### Required Software
-
-1. **Node.js** (v18 or higher)
-
-   ```bash
-   # Download from: https://nodejs.org/
-   node --version  # Should be v18+
-   ```
-
-2. **Rust** (for desktop app)
-
-   ```bash
-   # Install from: https://rustup.rs/
-   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs/ | sh
-   rustc --version  # Should show version
-   ```
-
-3. **Microsoft C++ Build Tools** (Windows only)
-
-   - Download: [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022)
-   - Select "C++ build tools" workload during installation
-   - **Restart computer after installation**
-
-4. **PostgreSQL** (for backend)
-   ```bash
-   # Download from: https://www.postgresql.org/download/
-   # OR use Docker: docker run -p 5432:5432 -e POSTGRES_PASSWORD=password postgres
-   ```
-
-### Optional Software
-
-- **Docker** (for containerized deployment)
-- **React Native CLI** (for mobile development)
-- **Android Studio** (for Android mobile development)
-- **Xcode** (for iOS mobile development - macOS only)
-
-## 🚀 Quick Start
-
-### 1. Clone Repository
+### Step 1: Download the Project
 
 ```bash
-git clone https://github.com/your-username/epitychia.git
+# Clone the repository
+git clone <your-repository-url>
 cd epitychia
+
+# Install dependencies
+npm install
 ```
 
-### 2. Install Dependencies
+### Step 2: Set Up the Backend
 
 ```bash
-# Install root dependencies
-npm install
-
-# Install desktop dependencies
-cd desktop
-npm install
+# Navigate to backend folder
+cd backend
 
 # Install backend dependencies
-cd ../backend
 npm install
 
-# Install mobile dependencies (optional)
-cd ../mobile
+# Create environment file
+copy .env.example .env
+
+# Start the backend server
+npm run dev
+```
+
+The backend will start on `http://localhost:3000`
+
+### Step 3: Set Up the Desktop App
+
+Open a new terminal window:
+
+```bash
+# Navigate to desktop folder
+cd desktop
+
+# Install desktop dependencies
 npm install
+
+# Start the desktop app
+npm run tauri dev
 ```
 
-### 3. Set Up Environment Variables
+The desktop app will open automatically.
 
-#### Desktop App
+### Step 4: Install the Chrome Extension
 
-```bash
-# desktop/.env
-VITE_FIREBASE_API_KEY=your-firebase-api-key
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
-VITE_FIREBASE_APP_ID=your-app-id
-```
+1. Open Google Chrome
+2. Go to `chrome://extensions/`
+3. Enable "Developer mode" (toggle in top-right corner)
+4. Click "Load unpacked"
+5. Select the `chrome-extension` folder from this project
+6. The Epitychia extension icon should appear in your browser toolbar
 
-#### Backend
+### Step 5: Create Your Account
 
-```bash
-# backend/.env
+1. Click the Epitychia extension icon in Chrome
+2. Click "Register" to create a new account
+3. Enter your email and password
+4. You're ready to go!
+
+## 🎮 How to Use
+
+### Desktop App
+- **View Clipboard History** - See everything you've copied
+- **Search & Filter** - Find specific clips quickly  
+- **AI Transformations** - Select text and choose an AI action
+- **Collections** - Organize clips into custom folders
+- **Sync Settings** - Configure cross-device synchronization
+
+### Chrome Extension
+- **Automatic Capture** - Just copy text normally (Ctrl+C)
+- **Instant AI Popup** - AI suggestions appear automatically when you copy text
+- **Quick Actions** - Click any suggestion to transform your text
+- **Manual Capture** - Click the extension icon → "Capture Current Clipboard"
+- **View History** - Click the extension icon → "View History"
+
+### AI Transformations Available
+- 📝 **Summarize** - Create concise summaries
+- 💼 **Make Professional** - Convert casual text to professional tone
+- ✏️ **Fix Grammar** - Correct grammar and spelling errors
+- 📧 **Generate Email** - Turn notes into proper email format
+- ✅ **Create Tasks** - Convert text into actionable task lists
+- 💡 **Expand Ideas** - Elaborate on concepts and ideas
+
+## 🔧 Configuration
+
+### Backend Configuration (backend/.env)
+```env
+# Server settings
+PORT=3000
 NODE_ENV=development
-PORT=3001
-DATABASE_URL=postgresql://username:password@localhost:5432/epitychia
-FIREBASE_PROJECT_ID=your-project-id
-FIREBASE_PRIVATE_KEY="your-private-key"
-FIREBASE_CLIENT_EMAIL=your-service-account@your-project.iam.gserviceaccount.com
-OPENAI_API_KEY=your-openai-api-key
+
+# Database (uses in-memory storage by default)
+SKIP_DATABASE=true
+
+# Security
+JWT_SECRET=your-secret-key-here
+
+# AI Service (optional - uses fallback transformations if not configured)
+HUGGINGFACE_API_KEY=your-huggingface-key-here
+USE_HUGGINGFACE=true
 ```
 
-### 4. Set Up Firebase
+### Desktop App Settings
+- Open the desktop app
+- Go to Settings (gear icon)
+- Configure sync preferences, AI settings, and storage options
 
-1. **Create Firebase Project**
+## 🛠️ Development
 
-   - Go to [Firebase Console](https://console.firebase.google.com/)
-   - Create new project
-   - Enable Authentication with Google and Email/Password
-
-2. **Get Configuration**
-
-   - Project Settings → General → Your apps → Web app
-   - Copy configuration to `desktop/.env`
-
-3. **Set Up Service Account**
-   - Project Settings → Service accounts
-   - Generate private key
-   - Add credentials to `backend/.env`
-
-### 5. Set Up Database
-
-```bash
-cd backend
-npm run migrate  # Run database migrations
+### Project Structure
+```
+epitychia/
+├── backend/          # Node.js API server
+├── desktop/          # Tauri desktop application  
+├── chrome-extension/ # Chrome browser extension
+└── shared/           # Shared TypeScript types
 ```
 
-### 6. Start Development Servers
+### Running in Development Mode
 
-#### Option A: Start All Services
+1. **Backend**: `cd backend && npm run dev`
+2. **Desktop**: `cd desktop && npm run tauri dev`  
+3. **Extension**: Load unpacked in Chrome developer mode
 
-```bash
-# From root directory
-npm run dev  # Starts all services concurrently
-```
-
-#### Option B: Start Services Individually
-
-**Backend:**
+### Building for Production
 
 ```bash
-cd backend
-npm run dev  # Starts on http://localhost:3001
-```
-
-**Desktop App (Web Mode):**
-
-```bash
+# Build desktop app
 cd desktop
-npm run dev  # Starts on http://localhost:1420
-```
+npm run tauri build
 
-**Desktop App (Native Mode):**
-
-```bash
-cd desktop
-npm run tauri dev  # Builds and runs native desktop app
-```
-
-**Mobile App:**
-
-```bash
-cd mobile
-npm run android  # For Android
-npm run ios      # For iOS (macOS only)
-```
-
-## 🎯 Usage
-
-### Desktop App
-
-1. **Launch the app** - Either via `npm run tauri dev` or the built executable
-2. **Authenticate** - Sign in with Google, GitHub, or email/password
-3. **Copy any content** - The app automatically monitors your clipboard
-4. **Get suggestions** - AI-powered actions appear instantly
-5. **Use global hotkey** - Press `Ctrl+Shift+V` to open the app anytime
-
-### Features Demo
-
-**Copy an email address:**
-
-```
-john.doe@example.com
-```
-
-**→ Suggestions:** Send Email, Add to Contacts, Copy to Clipboard
-
-**Copy a URL:**
-
-```
-https://github.com/user/repo
-```
-
-**→ Suggestions:** Open in Browser, Download, Share, Bookmark
-
-**Copy code:**
-
-```javascript
-function hello() {
-  console.log("Hello World!");
-}
-```
-
-**→ Suggestions:** Format Code, Run in Console, Save as Snippet
-
-## 🧪 Testing
-
-### Run Tests
-
-```bash
-# All tests
-npm test
-
-# Desktop tests
-cd desktop && npm test
-
-# Backend tests
-cd backend && npm test
-
-# Mobile tests
-cd mobile && npm test
-```
-
-### Manual Testing
-
-1. **Use the Test Panel** - Click "🧪 MVP Mode" in the desktop app
-2. **Test clipboard monitoring** - Use "Read Current" and "Write Test" buttons
-3. **Test AI suggestions** - Try the sample content provided
-
-## 📦 Building for Production
-
-### Desktop App
-
-```bash
-cd desktop
-npm run tauri build  # Creates installer in src-tauri/target/release/bundle/
-```
-
-### Backend
-
-```bash
+# Backend runs as-is (Node.js server)
 cd backend
-npm run build  # Creates dist/ folder
-npm start      # Runs production server
+npm start
 ```
 
-### Mobile App
+## 🔒 Privacy & Security
 
-```bash
-cd mobile
-npm run build:android  # Creates APK
-npm run build:ios      # Creates iOS app (macOS only)
-```
+- **Local-First**: All data stored locally by default
+- **Optional Cloud Sync**: Choose what to sync and when
+- **Encrypted Storage**: Sensitive data is encrypted
+- **No Tracking**: We don't collect personal information
 
-### Docker Deployment
-
-```bash
-# Build and run all services
-docker-compose up --build
-
-# Production deployment
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-## 🔧 Troubleshooting
+## 🆘 Troubleshooting
 
 ### Common Issues
 
-**"Failed to load clipboard history"**
+**Extension not working?**
+- Make sure the backend is running (`npm run dev` in backend folder)
+- Check that the extension is enabled in Chrome
+- Reload the extension in `chrome://extensions/`
 
-- This is expected in web mode - the real clipboard monitoring only works in the native desktop app
-- Run `npm run tauri dev` instead of `npm run dev`
+**Desktop app won't start?**
+- Ensure Node.js 16+ is installed
+- Run `npm install` in the desktop folder
+- Check that no other app is using port 1420
 
-**"Rust not found" or "cargo not found"**
+**AI transformations not working?**
+- The app works with fallback transformations even without AI API keys
+- For full AI features, add your Hugging Face API key to backend/.env
 
-```bash
-# Add Rust to PATH (Windows)
-$env:PATH += ";$env:USERPROFILE\.cargo\bin"
-
-# Or restart terminal/computer after Rust installation
-```
-
-**"linker `link.exe` not found"**
-
-- Install Microsoft C++ Build Tools
-- Restart computer after installation
-- Ensure "C++ build tools" workload is selected
-
-**Firebase authentication not working**
-
-- Check Firebase configuration in `.env` files
-- Ensure Google authentication is enabled in Firebase Console
-- Add `localhost` to authorized domains in Firebase
-
-**Database connection failed**
-
-- Ensure PostgreSQL is running
-- Check DATABASE_URL in backend/.env
-- Run migrations: `cd backend && npm run migrate`
+**Backend connection errors?**
+- Verify the backend is running on port 3000
+- Check firewall settings
+- Ensure no other service is using port 3000
 
 ### Getting Help
 
-- 📖 Check the [Documentation](./docs/)
-- 🐛 Report issues on [GitHub Issues](https://github.com/your-username/epitychia/issues)
-- 💬 Join our [Discord Community](https://discord.gg/your-invite)
+If you encounter issues:
+1. Check the browser console (F12) for error messages
+2. Look at the backend terminal for server logs
+3. Ensure all dependencies are installed correctly
+4. Try restarting all services
 
-## 🤝 Contributing
+## 📝 License
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Tauri](https://tauri.app/) - For the amazing desktop app framework
-- [Firebase](https://firebase.google.com/) - For authentication and backend services
-- [OpenAI](https://openai.com/) - For AI-powered content analysis
-- [React](https://reactjs.org/) - For the beautiful user interfaces
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 
-**Made with ❤️ by the Epitychia Team**
+**Made with ❤️ for productivity enthusiasts**
 
-_Transform your clipboard into an intelligent productivity tool!_
+*Epitychia transforms your clipboard into an intelligent assistant, making every copy-paste action more powerful and productive.*

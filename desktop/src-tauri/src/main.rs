@@ -3,7 +3,7 @@
 
 use tauri::{
     CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
-    Window, GlobalShortcutManager,
+    Window, GlobalShortcutManager, WindowBuilder, WindowUrl, LogicalPosition, LogicalSize,
 };
 use std::sync::Mutex;
 use std::thread;
@@ -36,6 +36,55 @@ fn show_notification(title: String, body: String) -> Result<(), String> {
         .body(&body)
         .show()
         .map_err(|e| format!("Failed to show notification: {}", e))
+}
+
+#[tauri::command]
+fn show_ai_popup(app_handle: tauri::AppHandle, content: String) -> Result<(), String> {
+    // Get cursor position (approximate center of screen for now)
+    let popup_window = app_handle.get_window("ai-popup");
+    
+    match popup_window {
+        Some(window) => {
+            // Window exists, just show it and update content
+            window.emit("update-content", content).map_err(|e| e.to_string())?;
+            window.show().map_err(|e| e.to_string())?;
+            window.set_focus().map_err(|e| e.to_string())?;
+        }
+        None => {
+            // Create new popup window
+            let _popup = WindowBuilder::new(
+                &app_handle,
+                "ai-popup",
+                WindowUrl::App("ai-popup.html".into())
+            )
+            .title("AI Assistant")
+            .inner_size(400.0, 300.0)
+            .resizable(false)
+            .decorations(false)
+            .always_on_top(true)
+            .skip_taskbar(true)
+            .transparent(true)
+            .center()
+            .build()
+            .map_err(|e| e.to_string())?;
+            
+            // Wait a moment for window to be ready, then emit content
+            std::thread::sleep(Duration::from_millis(100));
+            if let Some(window) = app_handle.get_window("ai-popup") {
+                window.emit("update-content", content).map_err(|e| e.to_string())?;
+            }
+        }
+    }
+    
+    Ok(())
+}
+
+#[tauri::command]
+fn hide_ai_popup(app_handle: tauri::AppHandle) -> Result<(), String> {
+    if let Some(window) = app_handle.get_window("ai-popup") {
+        window.hide().map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }
 
 fn create_system_tray() -> SystemTray {
@@ -108,8 +157,13 @@ fn start_clipboard_monitor(app_handle: AppHandle) {
                         last_content = Some(current_content.clone());
                         
                         // Emit a Tauri event to the frontend
-                        if let Err(e) = app_handle.emit_all("clipboard-changed", current_content) {
+                        if let Err(e) = app_handle.emit_all("clipboard-changed", current_content.clone()) {
                             eprintln!("Failed to emit clipboard event: {}", e);
+                        }
+                        
+                        // Show AI popup immediately when clipboard changes
+                        if let Err(e) = show_ai_popup(app_handle.clone(), current_content) {
+                            eprintln!("Failed to show AI popup: {}", e);
                         }
                     }
                 },
@@ -163,7 +217,9 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             get_clipboard_text,
             set_clipboard_text,
-            show_notification
+            show_notification,
+            show_ai_popup,
+            hide_ai_popup
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

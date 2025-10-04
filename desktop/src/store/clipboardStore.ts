@@ -1,8 +1,12 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { ClipboardItem, ActionSuggestion, ApiResponse } from '../../../shared/types';
-import toast from 'react-hot-toast';
-import { clipboardApi } from '../services/api';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import {
+  ClipboardItem,
+  ActionSuggestion,
+  ApiResponse,
+} from "../../../shared/types";
+import toast from "react-hot-toast";
+import { clipboardApi } from "../services/api";
 
 interface ClipboardStore {
   items: ClipboardItem[];
@@ -47,11 +51,11 @@ export const useClipboardStore = create<ClipboardStore>()(
       suggestions: [],
       deletedItems: [],
       isLoading: false,
-      searchQuery: '',
+      searchQuery: "",
       isOffline: false,
       pendingSync: [],
       showLiveNotification: false,
-      liveNotificationContent: '',
+      liveNotificationContent: "",
 
       initialize: async () => {
         set({ isLoading: true });
@@ -59,17 +63,69 @@ export const useClipboardStore = create<ClipboardStore>()(
           // Try to load from API first (for synced history)
           try {
             const items = await clipboardApi.getHistory();
-            set({ items, isLoading: false });
-            console.log('Loaded clipboard history from API:', items.length, 'items');
+            // Ensure items is always an array
+            const safeItems = Array.isArray(items) ? items : [];
+            set({ items: safeItems, isLoading: false });
+            console.log(
+              "Loaded clipboard history from API:",
+              safeItems.length,
+              "items"
+            );
           } catch (apiError) {
-            console.log('API not available, using local storage only');
-            // API not available, just use local storage (which is handled by persist middleware)
-            set({ isLoading: false });
+            console.log("API not available, using local storage and sample data");
+            // API not available, use local storage or create sample data for demo
+            set((state) => {
+              let currentItems = Array.isArray(state.items) ? state.items : [];
+              
+              // If no items exist, add some sample data for demo
+              if (currentItems.length === 0) {
+                currentItems = [
+                  {
+                    id: 'sample-1',
+                    userId: 'demo-user',
+                    content: 'Welcome to Epitychia! This is a sample clipboard item with AI-powered transformations.',
+                    contentType: 'text' as const,
+                    entities: [
+                      { type: 'other', value: 'Epitychia', confidence: 0.9, startIndex: 11, endIndex: 20 }
+                    ],
+                    suggestions: [
+                      { id: 'summarize', type: 'summarize_bullets', title: 'Summarize', description: 'Create bullet points', icon: '📝', confidence: 0.9, metadata: {} },
+                      { id: 'professional', type: 'professional_tone', title: 'Make Professional', description: 'Convert to business tone', icon: '💼', confidence: 0.8, metadata: {} }
+                    ],
+                    metadata: { category: 'other', confidence: 0.8 },
+                    createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 minutes ago
+                    updatedAt: new Date(Date.now() - 1000 * 60 * 5).toISOString()
+                  },
+                  {
+                    id: 'sample-2',
+                    userId: 'demo-user',
+                    content: 'hey can you help me with this project? i need to get it done asap and its really important for the meeting tomorrow',
+                    contentType: 'text' as const,
+                    entities: [],
+                    suggestions: [
+                      { id: 'professional', type: 'professional_tone', title: 'Make Professional', description: 'Convert to business tone', icon: '💼', confidence: 0.9, metadata: {} },
+                      { id: 'grammar', type: 'fix_grammar', title: 'Fix Grammar', description: 'Correct grammar and capitalization', icon: '✏️', confidence: 0.8, metadata: {} }
+                    ],
+                    metadata: { category: 'other', confidence: 0.7 },
+                    createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 minutes ago
+                    updatedAt: new Date(Date.now() - 1000 * 60 * 15).toISOString()
+                  }
+                ];
+              }
+              
+              return { 
+                items: currentItems,
+                isLoading: false 
+              };
+            });
           }
         } catch (error) {
-          console.error('Failed to initialize clipboard:', error);
+          console.error("Failed to initialize clipboard:", error);
           // Don't show error toast for initialization - it's expected in offline mode
-          set({ isLoading: false });
+          set((state) => ({ 
+            items: Array.isArray(state.items) ? state.items : [],
+            isLoading: false 
+          }));
         }
       },
 
@@ -77,18 +133,18 @@ export const useClipboardStore = create<ClipboardStore>()(
         const tempId = `temp-${Date.now()}`;
         const tempItem: ClipboardItem = {
           id: tempId,
-          userId: 'temp-user',
+          userId: "temp-user",
           content,
-          contentType: 'text',
+          contentType: "text",
           entities: [],
           suggestions: [],
-          metadata: { category: 'other', confidence: 0 },
+          metadata: { category: "other", confidence: 0 },
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
 
         // Add to local state immediately for offline support
-        set(state => {
+        set((state) => {
           const updatedItems = [tempItem, ...state.items];
           const limitedItems = updatedItems.slice(0, 5);
 
@@ -97,7 +153,7 @@ export const useClipboardStore = create<ClipboardStore>()(
             selectedItem: tempItem,
             suggestions: [],
             showLiveNotification: false, // Disabled to avoid popup interruptions
-            liveNotificationContent: ''
+            liveNotificationContent: "",
           };
         });
 
@@ -105,31 +161,35 @@ export const useClipboardStore = create<ClipboardStore>()(
           const newItem = await clipboardApi.addItem(content);
 
           // Replace temp item with real item
-          set(state => ({
-            items: state.items.map(item =>
+          set((state) => ({
+            items: state.items.map((item) =>
               item.id === tempId ? newItem : item
             ),
-            selectedItem: state.selectedItem?.id === tempId ? newItem : state.selectedItem,
-            suggestions: newItem.suggestions || []
+            selectedItem:
+              state.selectedItem?.id === tempId ? newItem : state.selectedItem,
+            suggestions: newItem.suggestions || [],
           }));
 
           if (newItem.suggestions && newItem.suggestions.length > 0) {
-            toast.success(`Found ${newItem.suggestions.length} smart suggestions!`, {
-              icon: '🧠',
-              duration: 3000,
-            });
+            toast.success(
+              `Found ${newItem.suggestions.length} smart suggestions!`,
+              {
+                icon: "🧠",
+                duration: 3000,
+              }
+            );
           }
         } catch (error) {
-          console.error('Failed to add clipboard item:', error);
+          console.error("Failed to add clipboard item:", error);
 
           // Mark as pending sync for offline support
-          set(state => ({
+          set((state) => ({
             pendingSync: [...state.pendingSync, tempItem],
-            isOffline: true
+            isOffline: true,
           }));
 
-          toast.error('Working offline - will sync when connected', {
-            icon: '📡',
+          toast.error("Working offline - will sync when connected", {
+            icon: "📡",
             duration: 2000,
           });
         }
@@ -138,48 +198,53 @@ export const useClipboardStore = create<ClipboardStore>()(
       removeClipboardItem: async (id: string) => {
         try {
           await clipboardApi.deleteItem(id);
-          set(state => ({
-            items: state.items.filter(item => item.id !== id)
+          set((state) => ({
+            items: state.items.filter((item) => item.id !== id),
           }));
-          toast.success('Clipboard item removed');
+          toast.success("Clipboard item removed");
         } catch (error) {
-          console.error('Error removing clipboard item:', error);
-          toast.error('Failed to remove clipboard item');
+          console.error("Error removing clipboard item:", error);
+          toast.error("Failed to remove clipboard item");
         }
       },
 
       clearHistory: async () => {
-        set({ items: [], selectedItem: null, suggestions: [], deletedItems: [] });
-        toast.success('Clipboard history and recycle bin cleared');
+        set({
+          items: [],
+          selectedItem: null,
+          suggestions: [],
+          deletedItems: [],
+        });
+        toast.success("Clipboard history and recycle bin cleared");
       },
 
       pinItem: async (id: string) => {
         try {
           await clipboardApi.pinItem(id);
-          set(state => ({
-            items: state.items.map(item => 
+          set((state) => ({
+            items: state.items.map((item) =>
               item.id === id ? { ...item, isPinned: true } : item
-            )
+            ),
           }));
-          toast.success('Item pinned');
+          toast.success("Item pinned");
         } catch (error) {
-          console.error('Error pinning item:', error);
-          toast.error('Failed to pin item');
+          console.error("Error pinning item:", error);
+          toast.error("Failed to pin item");
         }
       },
 
       unpinItem: async (id: string) => {
         try {
           await clipboardApi.unpinItem(id);
-          set(state => ({
-            items: state.items.map(item => 
+          set((state) => ({
+            items: state.items.map((item) =>
               item.id === id ? { ...item, isPinned: false } : item
-            )
+            ),
           }));
-          toast.success('Item unpinned');
+          toast.success("Item unpinned");
         } catch (error) {
-          console.error('Error unpinning item:', error);
-          toast.error('Failed to unpin item');
+          console.error("Error unpinning item:", error);
+          toast.error("Failed to unpin item");
         }
       },
 
@@ -188,47 +253,55 @@ export const useClipboardStore = create<ClipboardStore>()(
           const items = await clipboardApi.getHistory();
           set({ items });
         } catch (error) {
-          console.error('Error refreshing clipboard items:', error);
+          console.error("Error refreshing clipboard items:", error);
         }
       },
 
       selectItem: (item: ClipboardItem) => {
         set({
           selectedItem: item,
-          suggestions: item.suggestions || []
+          suggestions: item.suggestions || [],
         });
       },
 
       deleteItem: async (id: string) => {
-        console.log('deleteItem called with id:', id);
+        console.log("deleteItem called with id:", id);
 
         // Move item to recycle bin instead of permanent deletion
-        set(state => {
-          const itemToDelete = state.items.find(item => item.id === id);
+        set((state) => {
+          const itemToDelete = state.items.find((item) => item.id === id);
           if (!itemToDelete) return state;
 
           return {
             ...state,
-            items: state.items.filter(item => item.id !== id),
-            deletedItems: [...state.deletedItems, { ...itemToDelete, deletedAt: new Date().toISOString() }],
-            selectedItem: state.selectedItem?.id === id ? null : state.selectedItem,
-            suggestions: state.selectedItem?.id === id ? [] : state.suggestions
+            items: state.items.filter((item) => item.id !== id),
+            deletedItems: [
+              ...state.deletedItems,
+              { ...itemToDelete, deletedAt: new Date().toISOString() },
+            ],
+            selectedItem:
+              state.selectedItem?.id === id ? null : state.selectedItem,
+            suggestions: state.selectedItem?.id === id ? [] : state.suggestions,
           };
         });
 
-        toast.success('Item moved to recycle bin');
+        toast.success("Item moved to recycle bin");
 
         // Try to delete from API in background (optional)
         try {
           await clipboardApi.deleteItem(id);
         } catch (error) {
-          console.log('API deletion failed, but item moved to recycle bin locally');
+          console.log(
+            "API deletion failed, but item moved to recycle bin locally"
+          );
         }
       },
 
       restoreItem: (id: string) => {
-        set(state => {
-          const itemToRestore = state.deletedItems.find(item => item.id === id);
+        set((state) => {
+          const itemToRestore = state.deletedItems.find(
+            (item) => item.id === id
+          );
           if (!itemToRestore) return state;
 
           // Remove deletedAt property when restoring
@@ -237,37 +310,37 @@ export const useClipboardStore = create<ClipboardStore>()(
 
           return {
             ...state,
-            deletedItems: state.deletedItems.filter(item => item.id !== id),
-            items: [cleanItem, ...state.items]
+            deletedItems: state.deletedItems.filter((item) => item.id !== id),
+            items: [cleanItem, ...state.items],
           };
         });
 
-        toast.success('Item restored from recycle bin');
+        toast.success("Item restored from recycle bin");
       },
 
       permanentlyDeleteItem: (id: string) => {
-        set(state => ({
+        set((state) => ({
           ...state,
-          deletedItems: state.deletedItems.filter(item => item.id !== id)
+          deletedItems: state.deletedItems.filter((item) => item.id !== id),
         }));
 
-        toast.success('Item permanently deleted');
+        toast.success("Item permanently deleted");
       },
 
       emptyRecycleBin: () => {
-        set(state => ({
+        set((state) => ({
           ...state,
-          deletedItems: []
+          deletedItems: [],
         }));
 
-        toast.success('Recycle bin emptied');
+        toast.success("Recycle bin emptied");
       },
 
       moveAllToRecycleBin: () => {
-        set(state => {
-          const itemsWithDeletedAt = state.items.map(item => ({
+        set((state) => {
+          const itemsWithDeletedAt = state.items.map((item) => ({
             ...item,
-            deletedAt: new Date().toISOString()
+            deletedAt: new Date().toISOString(),
           }));
 
           return {
@@ -275,11 +348,11 @@ export const useClipboardStore = create<ClipboardStore>()(
             items: [],
             deletedItems: [...state.deletedItems, ...itemsWithDeletedAt],
             selectedItem: null,
-            suggestions: []
+            suggestions: [],
           };
         });
 
-        toast.success('All items moved to recycle bin');
+        toast.success("All items moved to recycle bin");
       },
 
       setSearchQuery: (query: string) => {
@@ -291,8 +364,8 @@ export const useClipboardStore = create<ClipboardStore>()(
           await clipboardApi.executeSuggestion(suggestion.id);
           toast.success(`Executed: ${suggestion.title}`);
         } catch (error) {
-          console.error('Failed to execute suggestion:', error);
-          toast.error('Failed to execute action');
+          console.error("Failed to execute suggestion:", error);
+          toast.error("Failed to execute action");
         }
       },
 
@@ -302,7 +375,8 @@ export const useClipboardStore = create<ClipboardStore>()(
       getItemsToday: () => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        return get().items.filter(item => new Date(item.createdAt) >= today).length;
+        return get().items.filter((item) => new Date(item.createdAt) >= today)
+          .length;
       },
 
       syncPendingItems: async () => {
@@ -315,9 +389,9 @@ export const useClipboardStore = create<ClipboardStore>()(
           }
 
           set({ pendingSync: [], isOffline: false });
-          toast.success('Synced offline items');
+          toast.success("Synced offline items");
         } catch (error) {
-          console.error('Failed to sync pending items:', error);
+          console.error("Failed to sync pending items:", error);
         }
       },
 
@@ -329,11 +403,11 @@ export const useClipboardStore = create<ClipboardStore>()(
       },
 
       hideLiveNotification: () => {
-        set({ showLiveNotification: false, liveNotificationContent: '' });
-      }
+        set({ showLiveNotification: false, liveNotificationContent: "" });
+      },
     }),
     {
-      name: 'clipboard-storage',
+      name: "clipboard-storage",
       partialize: (state) => ({
         items: state.items,
         deletedItems: state.deletedItems,

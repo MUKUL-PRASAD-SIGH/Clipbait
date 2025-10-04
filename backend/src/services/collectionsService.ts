@@ -1,4 +1,4 @@
-import { getPool } from '../database/connection';
+import { getPool } from '../database/simple-connection';
 import { ClipboardItem, ClipboardCollection } from '../types';
 import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';

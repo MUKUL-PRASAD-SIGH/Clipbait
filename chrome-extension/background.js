@@ -29,39 +29,27 @@ async function loadAuthToken() {
   });
 }
 
-// Monitor clipboard every 500ms
+// Monitor clipboard using content script approach (only when user enables it)
 function startClipboardMonitoring() {
   if (isMonitoring) return;
   isMonitoring = true;
   
-  setInterval(async () => {
-    try {
-      // Read clipboard content
-      const clipboardText = await navigator.clipboard.readText();
-      
-      // Check if content changed
-      if (clipboardText && clipboardText !== lastClipboardContent) {
-        lastClipboardContent = clipboardText;
-        console.log('Epitychia: Clipboard changed:', clipboardText.substring(0, 50) + '...');
-        
-        // Notify all tabs about clipboard change
-        notifyAllTabs(clipboardText);
-        
-        // Store in extension storage for popup access
-        chrome.storage.local.set({
-          lastClipboardContent: clipboardText,
-          timestamp: Date.now()
-        });
-        
-        // Send to backend if authenticated
-        if (authToken) {
-          await sendToBackend(clipboardText);
-        }
-      }
-    } catch (error) {
-      console.error('Epitychia: Error reading clipboard:', error);
+  console.log('🎯 Epitychia: Starting smart clipboard monitoring...');
+  
+  // Only inject content script when user navigates to new pages
+  // This reduces the aggressive monitoring
+  chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    if (changeInfo.status === 'complete' && tab.url && 
+        !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://') &&
+        !tab.url.startsWith('moz-extension://')) {
+      chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        files: ['content.js']
+      }).catch(() => {
+        // Ignore errors for tabs that can't be scripted
+      });
     }
-  }, 500);
+  });
 }
 
 // Notify all active tabs about clipboard change
@@ -92,13 +80,18 @@ async function sendToBackend(content) {
   if (!authToken) return;
   
   try {
-    const response = await fetch(`${backendUrl}/api/clipboard`, {
+    const response = await fetch(`${backendUrl}/api/clipboard/add`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${authToken}`
       },
-      body: JSON.stringify({ content })
+      body: JSON.stringify({ 
+        content,
+        contentType: 'text',
+        deviceId: 'chrome-extension',
+        timestamp: new Date().toISOString()
+      })
     });
     
     if (response.status === 401) {
@@ -158,6 +151,19 @@ async function handleMessage(message, sender, sendResponse) {
         sendResponse({ success: true, data: history });
         break;
         
+      case 'CLIPBOARD_COPY':
+        // Handle manual clipboard capture from popup
+        if (message.content) {
+          lastClipboardContent = message.content;
+          if (authToken) {
+            await sendToBackend(message.content);
+          }
+          sendResponse({ success: true });
+        } else {
+          sendResponse({ success: false, error: 'No content provided' });
+        }
+        break;
+        
       default:
         sendResponse({ success: false, error: 'Unknown message type' });
     }
@@ -188,7 +194,8 @@ async function handleLogin(credentials) {
       return { success: false, error: data.error || 'Login failed' };
     }
   } catch (error) {
-    return { success: false, error: 'Network error' };
+    console.error('Login network error:', error);
+    return { success: false, error: `Network error: ${error.message}` };
   }
 }
 
@@ -203,7 +210,7 @@ async function getClipboardHistory() {
   if (!authToken) return [];
   
   try {
-    const response = await fetch(`${backendUrl}/api/clipboard`, {
+    const response = await fetch(`${backendUrl}/api/clipboard/history?limit=10`, {
       headers: {
         'Authorization': `Bearer ${authToken}`
       }

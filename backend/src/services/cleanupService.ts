@@ -1,4 +1,4 @@
-import { getPool } from '../database/connection';
+import { getPool } from '../database/simple-connection';
 import { logger } from '../utils/logger';
 
 export class CleanupService {

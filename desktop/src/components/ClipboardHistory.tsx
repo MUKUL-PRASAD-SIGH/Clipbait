@@ -16,8 +16,10 @@ export function ClipboardHistory() {
   } = useClipboardStore();
 
   const filteredItems = useMemo(() => {
-    if (!searchQuery) return items;
-    return items.filter(item => 
+    // Ensure items is always an array
+    const safeItems = Array.isArray(items) ? items : [];
+    if (!searchQuery) return safeItems;
+    return safeItems.filter(item => 
       item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.entities.some(entity => 
         entity.value.toLowerCase().includes(searchQuery.toLowerCase())

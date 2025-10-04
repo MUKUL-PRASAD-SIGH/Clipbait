@@ -3,12 +3,17 @@ import { logger } from '../utils/logger';
 
 export const initializeFirebase = async (): Promise<void> => {
   try {
-    // Skip Firebase in demo mode or if credentials are not provided
-    if (process.env.SKIP_DATABASE === 'true' || 
-        !process.env.FIREBASE_PROJECT_ID || 
+    // Skip Firebase in demo mode
+    if (process.env.SKIP_DATABASE === 'true') {
+      logger.info('Firebase initialization skipped (demo mode)');
+      return;
+    }
+
+    // Check for required Firebase credentials
+    if (!process.env.FIREBASE_PROJECT_ID || 
         !process.env.FIREBASE_PRIVATE_KEY || 
         !process.env.FIREBASE_CLIENT_EMAIL) {
-      logger.info('Firebase initialization skipped (demo mode or missing credentials)');
+      logger.warn('Firebase credentials missing, skipping initialization');
       return;
     }
 
@@ -16,12 +21,12 @@ export const initializeFirebase = async (): Promise<void> => {
       admin.initializeApp({
         credential: admin.credential.cert({
           projectId: process.env.FIREBASE_PROJECT_ID,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
           clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
         }),
       });
+      logger.info('Firebase initialized successfully');
     }
-    logger.info('Firebase initialized successfully');
   } catch (error) {
     logger.error('Firebase initialization failed:', error);
     // Don't throw in demo mode, just log the error
@@ -33,15 +38,22 @@ export const initializeFirebase = async (): Promise<void> => {
 
 export const verifyFirebaseToken = async (token: string): Promise<admin.auth.DecodedIdToken> => {
   try {
-    // If Firebase is not initialized (demo mode), throw error to fall back to JWT
+    // If Firebase is not initialized, try to initialize it first
     if (!admin.apps.length) {
-      throw new Error('Firebase not initialized - falling back to JWT');
+      await initializeFirebase();
     }
     
-    return await admin.auth().verifyIdToken(token);
+    // If still not initialized, throw error
+    if (!admin.apps.length) {
+      throw new Error('Firebase not initialized');
+    }
+    
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    logger.info('Firebase token verified successfully');
+    return decodedToken;
   } catch (error) {
     logger.error('Firebase token verification failed:', error);
-    throw new Error('Invalid token');
+    throw new Error('Firebase authentication failed');
   }
 };
 

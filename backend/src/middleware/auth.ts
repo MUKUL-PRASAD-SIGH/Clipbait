@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyFirebaseToken } from '../services/firebase';
-import { getPool } from '../database/connection';
+import { getPool } from '../database/simple-connection';
 import { User, AuthRequest } from '../types';
 import { logger } from '../utils/logger';
 import jwt from 'jsonwebtoken';

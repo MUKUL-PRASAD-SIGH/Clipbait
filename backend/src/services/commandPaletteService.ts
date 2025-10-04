@@ -1,5 +1,5 @@
 import { ClipboardItem, ActionSuggestion } from '../types';
-import { getPool } from '../database/connection';
+import { getPool } from '../database/simple-connection';
 import { logger } from '../utils/logger';
 
 interface Command {

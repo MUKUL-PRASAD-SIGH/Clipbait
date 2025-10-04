@@ -159,12 +159,28 @@ export class MemoryStorage {
 
   // Add some demo data
   initializeDemoData() {
-    // Add a demo user
+    // Add demo users
     this.users.push({
       id: 'demo-user-id',
       email: 'demo@example.com',
       password_hash: '$2b$12$demo.hash.for.testing.purposes.only',
       firebase_uid: 'demo-firebase-uid',
+      preferences: {
+        enableNotifications: true,
+        autoSync: true,
+        maxHistoryItems: 100,
+        enableAI: true
+      },
+      created_at: new Date(),
+      updated_at: new Date()
+    });
+
+    // Add your user account
+    this.users.push({
+      id: 'user-charithra',
+      email: 'charithra754@gmail.com',
+      password_hash: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBdXzgVliHG/pG', // password: "password123"
+      firebase_uid: 'charithra-firebase-uid',
       preferences: {
         enableNotifications: true,
         autoSync: true,

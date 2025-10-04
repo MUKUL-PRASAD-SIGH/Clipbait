@@ -1,30 +1,23 @@
 {
-  "name": "epitychia-full-stack",
+  "name": "epitychia",
   "version": "1.0.0",
-  "description": "Epitychia Smart Clipboard - Full Stack Application",
+  "description": "AI-powered smart clipboard with instant text transformations",
   "scripts": {
-    "test": "node test-functionality.js",
-    "check": "node check-backend.js",
-    "setup:db": "node setup-database.js",
     "install:all": "cd backend && npm install && cd ../desktop && npm install",
     "dev": "node start-all.js",
-    "dev:backend": "node start-backend.js",
-    "dev:desktop": "cd desktop && npm run dev",
-    "build:all": "cd backend && npm run build && cd ../desktop && npm run build",
-    "start:backend": "cd backend && npm start",
-    "start:desktop": "cd desktop && npm run preview"
-  },
-  "devDependencies": {
-    "axios": "^1.6.2"
-  },
-  "dependencies": {
-    "firebase": "^12.3.0"
+    "dev:backend": "cd backend && npm run dev",
+    "dev:desktop": "cd desktop && npm run tauri dev",
+    "setup": "npm run install:all"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
   },
-  "keywords": ["clipboard", "ai", "productivity", "tauri", "react", "typescript"],
+  "keywords": ["clipboard", "ai", "productivity", "tauri", "chrome-extension", "typescript"],
   "author": "Epitychia Team",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/epitychia.git"
+  }
 }

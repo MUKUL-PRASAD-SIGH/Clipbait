@@ -67,7 +67,22 @@
         "width": 800,
         "height": 600,
         "minWidth": 400,
-        "minHeight": 300
+        "minHeight": 300,
+        "label": "main"
+      },
+      {
+        "label": "ai-popup",
+        "title": "AI Assistant",
+        "width": 400,
+        "height": 300,
+        "resizable": false,
+        "fullscreen": false,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false,
+        "transparent": true,
+        "center": false
       }
     ],
     "systemTray": {

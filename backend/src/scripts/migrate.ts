@@ -1,4 +1,4 @@
-import { pool } from '../database/connection';
+import { getPool } from '../database/simple-connection';
 import { logger } from '../utils/logger';
 
 async function runMigrations() {
@@ -6,6 +6,7 @@ async function runMigrations() {
     logger.info('Starting database migrations...');
     
     // Check if database is accessible
+    const pool = getPool();
     const client = await pool.connect();
     const result = await client.query('SELECT NOW()');
     logger.info('Database connection successful:', result.rows[0]);

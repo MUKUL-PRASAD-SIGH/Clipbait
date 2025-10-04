@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import { authenticateUser } from '../middleware/auth';
-import { getPool } from '../database/connection';
+import { getPool } from '../database/simple-connection';
 import { AuthRequest, ApiResponse, ClipboardItem } from '../types';
 import { aiService } from '../services/aiService';
 import { logger } from '../utils/logger';
@@ -9,6 +9,38 @@ import { clipboardLimiter, apiLimiter } from '../middleware/rateLimiter';
 import { EncryptionService } from '../utils/encryption';
 
 const router = Router();
+
+// Get clipboard history
+router.get('/history', 
+  apiLimiter,
+  authenticateUser, 
+  async (req: AuthRequest, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = parseInt(req.query.offset as string) || 0;
+      const pool = getPool();
+      
+      const result = await pool.query(
+        'SELECT * FROM clipboard_items WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3',
+        [req.user!.id, limit, offset]
+      );
+
+      const response: ApiResponse = {
+        success: true,
+        data: result.rows,
+        pagination: {
+          limit,
+          offset,
+          total: result.rowCount || 0
+        }
+      };
+      res.json(response);
+    } catch (error) {
+      logger.error('Failed to get clipboard history:', error);
+      res.status(500).json({ success: false, error: 'Failed to get clipboard history' });
+    }
+  }
+);
 
 // Get clipboard history with security fixes
 router.get('/', 

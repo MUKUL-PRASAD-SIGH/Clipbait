@@ -1,9 +1,9 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { authenticateUser } from '../middleware/auth';
 import { AuthRequest, ApiResponse, User } from '../types';
 import { authLimiter } from '../middleware/rateLimiter';
 import { body, validationResult } from 'express-validator';
-import { getPool } from '../database/connection';
+import { getPool } from '../database/simple-connection';
 import { logger } from '../utils/logger';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
@@ -198,7 +198,7 @@ router.put('/profile',
   [
     body('preferences').isObject().optional()
   ],
-  async (req: AuthRequest, res) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {

@@ -50,7 +50,8 @@ function showLoginInterface() {
         showError(result.error || 'Login failed');
       }
     } catch (error) {
-      showError('Network error. Please try again.');
+      console.error('Login error:', error);
+      showError(`Network error: ${error.message || 'Please try again.'}`);
     } finally {
       loginBtn.disabled = false;
       loginBtn.textContent = 'Login';
