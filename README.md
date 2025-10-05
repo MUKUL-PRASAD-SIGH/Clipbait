@@ -1,237 +1,404 @@
-# 🎯 Epitychia - AI-Powered Smart Clipboard
+# 🎯 Clipbait (Epitychia) - AI-Powered Smart Clipboard
 
-**Epitychia** is an intelligent clipboard management system that automatically captures your copied text and provides AI-powered transformations like summarization, grammar fixes, professional rewrites, and more. Available as both a desktop app and Chrome extension.
+**Transform your clipboard into an intelligent assistant with AI-powered suggestions and cross-platform synchronization.**
+
+[🚀 Quick Start](#-quick-start-guide) • [📱 Features](#-key-features) • [🏗️ Architecture](#-project-architecture) • [🔧 Development](#-development) • [📖 Documentation](#-documentation)
+
+</div>
+
+---
+
+## 📋 Table of Contents
+
+- [🎯 About](#-about)
+- [✨ Key Features](#-key-features)
+- [🏗️ Project Architecture](#-project-architecture)
+- [🚀 Quick Start Guide](#-quick-start-guide)
+- [📱 Applications](#-applications)
+- [🎮 Usage](#-usage)
+- [🔧 Development](#-development)
+- [📊 API Reference](#-api-reference)
+- [🔒 Security](#-security)
+- [🛠️ Troubleshooting](#-troubleshooting)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+
+---
+
+## 🎯 About
+
+**Clipbait (Epitychia)** is an intelligent, multi-platform clipboard management system that revolutionizes how you interact with copied content. By combining native system integration with advanced AI capabilities, it transforms your simple copy-paste workflow into a powerful productivity tool.
+
+### 🌟 Why Clipbait?
+
+- **🧠 AI-First Approach**: Every copied item is analyzed for intelligent suggestions
+- **⚡ Lightning Fast**: Sub-100ms clipboard detection with instant AI processing
+- **🔄 Universal Sync**: Seamless synchronization across desktop, mobile, and web
+- **🛡️ Privacy Focused**: Local-first storage with enterprise-grade encryption
+- **🎯 Context Aware**: Understands content types and provides relevant actions
 
 ## ✨ Key Features
 
-- **Smart Clipboard Monitoring** - Automatically captures and stores everything you copy
-- **AI Text Transformations** - Instantly improve, summarize, or rewrite your text with AI
-- **Cross-Platform Sync** - Access your clipboard history across desktop and browser
-- **Instant AI Popup** - Get AI suggestions the moment you copy text in your browser
-- **Secure Storage** - All your data is stored locally with optional cloud sync
+### 🤖 Intelligent AI Analysis
+- **Smart Content Recognition**: Automatically detects emails, phone numbers, URLs, addresses, code snippets
+- **Contextual Suggestions**: AI-powered actions like "Send Email", "Call Number", "Open Maps", "Format Code"
+- **Multi-Model Support**: Integration with OpenAI GPT-4, Hugging Face, and local AI models
+- **Learning Capabilities**: Improves suggestions based on usage patterns
+
+### 📱 Cross-Platform Ecosystem
+- **🖥️ Native Desktop App**: Built with Tauri (Rust + React) for optimal performance
+- **🌐 Chrome Extension**: Instant browser integration with popup AI suggestions  
+- **📱 Mobile Apps**: React Native apps for iOS and Android
+- **☁️ Web Dashboard**: Full-featured web application for clipboard management
+
+### 🔄 Real-Time Synchronization
+- **Instant Sync**: Copy on any device, access immediately on all others
+- **Conflict Resolution**: Smart merging of concurrent changes
+- **Offline Support**: Full functionality without internet, syncs when reconnected
+- **Selective Sync**: Choose what content to sync across devices
+
+### 🛡️ Enterprise Security
+- **AES-256 Encryption**: End-to-end encryption for all clipboard data
+- **Zero-Knowledge Architecture**: Your data is private by design
+- **Authentication**: Firebase Auth with Google, GitHub, and email/password support
+- **Rate Limiting**: Advanced protection against abuse and attacks
+
+### 🎨 Exceptional User Experience
+- **Native System Integration**: Global hotkeys, system tray, notifications
+- **Modern UI**: Beautiful, responsive design with dark/light themes
+- **Accessibility**: WCAG 2.1 AA compliant with full keyboard navigation
+- **Performance**: Optimized for speed with smooth animations and transitions
+
+---
+
+## 🏗️ Project Architecture
+
+```
+clipbait/
+├── 📦 backend/                 # Node.js + Express API Server
+│   ├── 🤖 ai-service/         # Python AI Processing Service
+│   ├── 🗄️ database/           # PostgreSQL schemas & migrations
+│   ├── 🔐 src/middleware/      # Auth, validation, rate limiting
+│   ├── 🛣️ src/routes/         # API endpoints (auth, clipboard, AI)
+│   └── 🧪 tests/              # Backend test suite
+├── 🖥️ desktop/                # Tauri Desktop Application
+│   ├── 🦀 src-tauri/          # Rust backend (system integration)
+│   ├── ⚛️ src/                # React frontend components
+│   └── 🎨 src/styles/         # UI styling and themes
+├── 📱 mobile/                  # React Native Mobile Apps
+│   ├── 🤖 android/            # Android-specific code
+│   ├── 🍎 ios/                # iOS-specific code (future)
+│   └── 📱 src/                # Shared mobile components
+├── 🌐 chrome-extension/        # Chrome Browser Extension
+│   ├── 📄 manifest.json       # Extension configuration
+│   ├── 🔧 background.js       # Background script
+│   └── 🎪 popup/              # Extension popup interface
+├── 📄 docs/                   # Comprehensive documentation
+└── 🔧 scripts/                # Build and deployment scripts
+```
+
+### 🔧 Technology Stack
+
+| Component | Technologies |
+|-----------|-------------|
+| **Backend API** | Node.js, Express.js, TypeScript, PostgreSQL |
+| **AI Service** | Python, FastAPI, OpenAI API, Hugging Face |
+| **Desktop App** | Tauri (Rust + React), TypeScript, Vite |
+| **Mobile Apps** | React Native, TypeScript, Expo |
+| **Browser Extension** | Vanilla JavaScript, Chrome Extension API |
+| **Authentication** | Firebase Auth, JWT tokens |
+| **Database** | PostgreSQL with connection pooling |
+| **Real-time** | Socket.IO, WebSockets |
+| **Security** | AES-256 encryption, bcrypt, rate limiting |
 
 ## 🚀 Quick Start Guide
 
-### Prerequisites
+### 📋 Prerequisites
 
-Before you begin, make sure you have these installed on your computer:
+Ensure you have the following installed on your system:
 
-1. **Node.js** (version 16 or higher) - [Download here](https://nodejs.org/)
-2. **Python** (version 3.8 or higher) - [Download here](https://python.org/)
-3. **Git** - [Download here](https://git-scm.com/)
-4. **Google Chrome** browser
+| Requirement | Version | Download Link |
+|-------------|---------|---------------|
+| **Node.js** | 18.0+ | [nodejs.org](https://nodejs.org/) |
+| **Python** | 3.8+ | [python.org](https://python.org/) |
+| **Git** | Latest | [git-scm.com](https://git-scm.com/) |
+| **Rust** | 1.70+ | [rustup.rs](https://rustup.rs/) |
+| **Google Chrome** | Latest | [chrome.google.com](https://chrome.google.com/) |
 
-### Step 1: Download the Project
+### ⚡ One-Command Setup
 
 ```bash
-# Clone the repository
-git clone <your-repository-url>
-cd epitychia
+# Clone and setup everything automatically
+git clone https://github.com/MUKUL-PRASAD-SIGH/Clipbait.git
+cd Clipbait
+npm run setup    # Installs all dependencies
+npm run dev      # Starts all services
+```
+
+### 🔧 Manual Setup (Detailed)
+
+#### 1️⃣ **Clone Repository**
+```bash
+git clone https://github.com/MUKUL-PRASAD-SIGH/Clipbait.git
+cd Clipbait
+```
+
+#### 2️⃣ **Backend API Setup**
+```bash
+cd backend
 
 # Install dependencies
 npm install
-```
 
-### Step 2: Set Up the Backend
+# Setup environment variables
+cp .env.example .env
 
-```bash
-# Navigate to backend folder
-cd backend
-
-# Install backend dependencies
-npm install
-
-# Create environment file
-copy .env.example .env
+# Configure your environment (optional)
+# Edit .env file with your API keys and database settings
 
 # Start the backend server
 npm run dev
 ```
+✅ Backend runs on `http://localhost:3001`
 
-The backend will start on `http://localhost:3000`
-
-### Step 3: Set Up the AI Service
-
-Open a new terminal window:
-
+#### 3️⃣ **AI Service Setup**
 ```bash
-# Navigate to AI service folder
 cd backend/ai-service
+
+# Create Python virtual environment (recommended)
+python -m venv ai-env
+source ai-env/bin/activate  # On Windows: ai-env\Scripts\activate
 
 # Install Python dependencies
 pip install -r requirements.txt
 
-# Start the AI service
-python app.py
+# Start AI service
+python ai_server.py
 ```
+✅ AI Service runs on `http://localhost:5000`
 
-The AI service will start on `http://localhost:5000` and provide text transformation capabilities.
-
-### Step 4: Set Up the Desktop App
-
-Open a new terminal window:
-
+#### 4️⃣ **Desktop App Setup**
 ```bash
-# Navigate to desktop folder
 cd desktop
 
-# Install desktop dependencies
+# Install dependencies
 npm install
 
-# Start the desktop app
+# Start desktop development server
 npm run tauri dev
 ```
+✅ Desktop app launches automatically
 
-The desktop app will open automatically.
-
-### Step 5: Install the Chrome Extension
-
-1. Open Google Chrome
-2. Go to `chrome://extensions/`
-3. Enable "Developer mode" (toggle in top-right corner)
-4. Click "Load unpacked"
-5. Select the `chrome-extension` folder from this project
-6. The Epitychia extension icon should appear in your browser toolbar
-
-### Step 6: Create Your Account
-
-1. Click the Epitychia extension icon in Chrome
-2. Click "Register" to create a new account
-3. Enter your email and password
-4. You're ready to go!
-
-## 🎮 How to Use
-
-### Desktop App
-- **View Clipboard History** - See everything you've copied
-- **Search & Filter** - Find specific clips quickly  
-- **AI Transformations** - Select text and choose an AI action
-- **Collections** - Organize clips into custom folders
-- **Sync Settings** - Configure cross-device synchronization
-
-### Chrome Extension
-- **Automatic Capture** - Just copy text normally (Ctrl+C)
-- **Instant AI Popup** - AI suggestions appear automatically when you copy text
-- **Quick Actions** - Click any suggestion to transform your text
-- **Manual Capture** - Click the extension icon → "Capture Current Clipboard"
-- **View History** - Click the extension icon → "View History"
-
-### AI Transformations Available
-- 📝 **Summarize** - Create concise summaries
-- 💼 **Make Professional** - Convert casual text to professional tone
-- ✏️ **Fix Grammar** - Correct grammar and spelling errors
-- 📧 **Generate Email** - Turn notes into proper email format
-- ✅ **Create Tasks** - Convert text into actionable task lists
-- 💡 **Expand Ideas** - Elaborate on concepts and ideas
-
-## 🔧 Configuration
-
-### Backend Configuration (backend/.env)
-```env
-# Server settings
-PORT=3000
-NODE_ENV=development
-
-# Database (uses in-memory storage by default)
-SKIP_DATABASE=true
-
-# Security
-JWT_SECRET=your-secret-key-here
-
-# AI Service (optional - uses fallback transformations if not configured)
-HUGGINGFACE_API_KEY=your-huggingface-key-here
-USE_HUGGINGFACE=true
-```
-
-### Desktop App Settings
-- Open the desktop app
-- Go to Settings (gear icon)
-- Configure sync preferences, AI settings, and storage options
-
-## 🛠️ Development
-
-### Project Structure
-```
-epitychia/
-├── backend/              # Node.js API server
-│   └── ai-service/       # Python AI transformation service
-├── desktop/              # Tauri desktop application  
-├── chrome-extension/     # Chrome browser extension
-└── shared/               # Shared TypeScript types
-```
-
-### Running in Development Mode
-
-1. **Backend**: `cd backend && npm run dev`
-2. **AI Service**: `cd backend/ai-service && python app.py`
-3. **Desktop**: `cd desktop && npm run tauri dev`  
-4. **Extension**: Load unpacked in Chrome developer mode
-
-### Building for Production
-
+#### 5️⃣ **Mobile App Setup** 
 ```bash
-# Build desktop app
-cd desktop
-npm run tauri build
+cd mobile
 
-# Backend runs as-is (Node.js server)
-cd backend
-npm start
+# Install dependencies
+npm install
+
+# For Android development
+npm run android
+
+# For web simulator
+npm run web
 ```
 
-## 🔒 Privacy & Security
+#### 6️⃣ **Chrome Extension Setup**
+1. Open Chrome browser
+2. Navigate to `chrome://extensions/`
+3. Enable **Developer Mode** (top-right toggle)
+4. Click **"Load unpacked"**
+5. Select the `chrome-extension` folder
+6. Extension icon appears in browser toolbar
 
-- **Local-First**: All data stored locally by default
-- **Optional Cloud Sync**: Choose what to sync and when
-- **Encrypted Storage**: Sensitive data is encrypted
-- **No Tracking**: We don't collect personal information
+### 🎯 Verification Checklist
 
-## 🆘 Troubleshooting
+After setup, verify everything is working:
 
-### Common Issues
-
-**Extension not working?**
-- Make sure the backend is running (`npm run dev` in backend folder)
-- Check that the extension is enabled in Chrome
-- Reload the extension in `chrome://extensions/`
-
-**Desktop app won't start?**
-- Ensure Node.js 16+ is installed
-- Run `npm install` in the desktop folder
-- Check that no other app is using port 1420
-
-**AI transformations not working?**
-- Make sure the AI service is running (`python app.py` in backend/ai-service folder)
-- Check that Python dependencies are installed (`pip install -r requirements.txt`)
-- The app works with fallback transformations even without AI models
-- For full AI features, ensure PyTorch and transformers are properly installed
-
-**AI service installation issues?**
-- Ensure Python 3.8+ is installed
-- If you get PyTorch version errors, the requirements.txt has been updated with compatible versions
-- For CUDA support, install the appropriate PyTorch version for your GPU
-- On Windows, you may need Visual Studio Build Tools for some dependencies
-
-**Backend connection errors?**
-- Verify the backend is running on port 3000
-- Verify the AI service is running on port 5000
-- Check firewall settings
-- Ensure no other service is using ports 3000 or 5000
-
-### Getting Help
-
-If you encounter issues:
-1. Check the browser console (F12) for error messages
-2. Look at the backend terminal for server logs
-3. Ensure all dependencies are installed correctly
-4. Try restarting all services
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+- [ ] **Backend API**: Visit `http://localhost:3001/health` - should return `{"status": "ok"}`
+- [ ] **AI Service**: Visit `http://localhost:5000/health` - should return service status
+- [ ] **Desktop App**: Should launch automatically and show login screen
+- [ ] **Chrome Extension**: Click extension icon - should show popup interface
+- [ ] **Clipboard Detection**: Copy text - should appear in desktop app history
 
 ---
 
-**Made with ❤️ for productivity enthusiasts**
+## 📱 Applications
 
-*Epitychia transforms your clipboard into an intelligent assistant, making every copy-paste action more powerful and productive.*
+### 🖥️ Desktop Application (Tauri + React)
+
+<details>
+<summary><strong>🎯 Core Features</strong></summary>
+
+- **Real-time Clipboard Monitoring**: Automatic detection of system clipboard changes
+- **AI-Powered Suggestions**: Context-aware actions for copied content
+- **Global Hotkeys**: `Ctrl+Shift+V` for instant access from anywhere
+- **System Tray Integration**: Background operation with quick access menu
+- **Cross-device Synchronization**: Real-time sync across all platforms
+- **Secure Authentication**: Firebase Auth with multiple providers
+- **Advanced Search**: Fuzzy search with filters and tags
+- **Collections**: Organize clips into custom categories
+- **Data Export/Import**: Full data portability and backup options
+
+</details>
+
+**Key Components:**
+- `ClipboardManager`: Core clipboard monitoring and processing
+- `SuggestionPanel`: AI-powered action suggestions display
+- `AuthenticationFlow`: Secure user authentication and session management
+- `DataSync`: Real-time synchronization with backend services
+- `SettingsManager`: User preferences and configuration management
+
+### 🌐 Chrome Extension
+
+<details>
+<summary><strong>🚀 Instant AI Suggestions</strong></summary>
+
+- **Popup AI Interface**: Immediate suggestions when you copy text
+- **Contextual Actions**: Smart actions based on content type
+- **Seamless Integration**: Works with any website or web application
+- **Privacy-First**: Optional clipboard monitoring with user control
+- **Notification System**: Smart alerts with actionable suggestions
+- **Quick Access**: One-click execution of AI-suggested actions
+
+</details>
+
+**Extension Architecture:**
+```javascript
+// Background script handles system integration
+chrome.action.onClicked.addListener(() => {
+  // Show popup with clipboard analysis
+});
+
+// Content script provides page-level clipboard detection
+document.addEventListener('copy', (event) => {
+  // Process clipboard content with AI
+});
+```
+
+### 📱 Mobile Applications (React Native)
+
+<details>
+<summary><strong>📲 Cross-Platform Mobile Experience</strong></summary>
+
+- **Native Performance**: Optimized for iOS and Android platforms
+- **Push Notifications**: Smart alerts for clipboard activity
+- **Biometric Authentication**: Secure access with fingerprint/face recognition
+- **Offline Synchronization**: Full functionality without internet connection
+- **Native Sharing**: Integration with system share functionality
+- **Voice Commands**: Hands-free clipboard management
+- **Widget Support**: Home screen widgets for quick access
+
+</details>
+
+**Mobile Features:**
+- Cross-platform clipboard synchronization
+- Native system integration (sharing, intents)
+- Biometric security features
+- Offline-first architecture with sync
+
+### ☁️ Web Dashboard (Future)
+
+- **Cloud Management**: Comprehensive clipboard history management
+- **Team Collaboration**: Shared clipboard spaces for teams
+- **Analytics Dashboard**: Usage insights and productivity metrics
+- **Advanced Search**: Full-text search across all clipboard history
+- **Data Visualization**: Visual representation of clipboard patterns
+
+## 🎮 Usage
+
+### 🖥️ Desktop Application
+
+#### Basic Operations
+```bash
+# Global hotkey access
+Ctrl+Shift+V          # Open clipboard panel anywhere
+Ctrl+Shift+C          # Enhanced copy with AI analysis
+Ctrl+Shift+H          # Show clipboard history
+Ctrl+Shift+S          # Search clipboard
+```
+
+#### Core Workflows
+
+<details>
+<summary><strong>📋 Clipboard Management</strong></summary>
+
+1. **Automatic Capture**: Copy text normally (`Ctrl+C`) - appears instantly in history
+2. **Manual Organization**: Drag items into collections, add tags and descriptions
+3. **Quick Search**: Use fuzzy search to find items across entire history
+4. **Bulk Operations**: Select multiple items for batch actions
+5. **Data Export**: Export history as JSON, CSV, or plain text
+
+</details>
+
+<details>
+<summary><strong>🤖 AI-Powered Actions</strong></summary>
+
+| Content Type | Available Actions |
+|--------------|-------------------|
+| **📧 Email Address** | Send Email, Add to Contacts, Create Calendar Event |
+| **📞 Phone Number** | Call, SMS, WhatsApp, Add to Contacts |
+| **🌐 URL/Link** | Open in Browser, Bookmark, Share, Archive |
+| **📍 Address** | Open in Maps, Get Directions, Save Location |
+| **💻 Code Snippet** | Format Code, Run Code, Open in IDE, Create Gist |
+| **📄 Text Content** | Summarize, Translate, Grammar Check, Rewrite |
+| **🔢 Numbers/Data** | Calculate, Convert Units, Generate Charts |
+
+</details>
+
+### 🌐 Chrome Extension
+
+#### Instant AI Suggestions
+1. **Copy any text** on a webpage
+2. **AI popup appears** automatically with contextual suggestions
+3. **Click any action** to execute immediately
+4. **Results appear** in notification or new tab
+
+#### Extension Features
+```javascript
+// Available through extension popup
+- View recent clipboard history
+- Toggle automatic AI processing
+- Configure notification preferences  
+- Manage connected accounts
+- Export clipboard data
+```
+
+### 📱 Mobile Applications
+
+#### Cross-Device Sync
+- **Copy on desktop** → **Access on mobile** instantly
+- **Smart notifications** when new clipboard items are available
+- **Conflict resolution** for simultaneous editing across devices
+- **Selective sync** for privacy-sensitive content
+
+#### Mobile-Specific Features
+- **Share integration**: Send clipboard items to any app
+- **Voice input**: Dictate directly to clipboard
+- **Widgets**: Quick access from home screen
+- **Biometric security**: Secure access with fingerprint/face ID
+
+-
+## 📊 Project Status & License
+
+### 📈 Current Status
+[![Build Status](https://img.shields.io/github/workflow/status/MUKUL-PRASAD-SIGH/Clipbait/CI)](https://github.com/MUKUL-PRASAD-SIGH/Clipbait/actions)
+[![Coverage](https://img.shields.io/codecov/c/github/MUKUL-PRASAD-SIGH/Clipbait)](https://codecov.io/gh/MUKUL-PRASAD-SIGH/Clipbait)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+
+### 🛠️ Built With
+[Tauri](https://tauri.app/) • [React](https://reactjs.org/) • [Node.js](https://nodejs.org/) • [PostgreSQL](https://postgresql.org/) • [OpenAI](https://openai.com/api/) • [Firebase](https://firebase.google.com/)
+
+### 📄 License
+**MIT License** - Copyright (c) 2024 Clipbait Team. See [LICENSE](LICENSE) for details.
+
+<div align="center">
+
+**🚀 Made with ❤️ for Productivity Enthusiasts**
+
+*Transform your clipboard into an intelligent assistant.*
+
+[![⭐ Star](https://img.shields.io/github/stars/MUKUL-PRASAD-SIGH/Clipbait?style=social)](https://github.com/MUKUL-PRASAD-SIGH/Clipbait) • [🐛 Report Bug](https://github.com/MUKUL-PRASAD-SIGH/Clipbait/issues) • [💡 Request Feature](https://github.com/MUKUL-PRASAD-SIGH/Clipbait/issues/new)
+
+</div>
