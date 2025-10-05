@@ -1,82 +1,76 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import Toast from 'react-native-toast-message';
-import Icon from 'react-native-vector-icons/Ionicons';
-
-import { useAuthStore } from './src/store/authStore';
-import { useClipboardStore } from './src/store/clipboardStore';
+import { StatusBar, Platform, Text } from 'react-native';
+import { ClipboardProvider } from './src/context/ClipboardContext';
+import { AuthProvider } from './src/context/AuthContext';
 
 // Screens
-import LoginScreen from './src/screens/LoginScreen';
-import ClipboardHistoryScreen from './src/screens/ClipboardHistoryScreen';
+import ClipboardScreen from './src/screens/ClipboardScreen';
 import SuggestionsScreen from './src/screens/SuggestionsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import LoginScreen from './src/screens/LoginScreen';
 
-const Stack = createStackNavigator();
+// Icons - Web compatible
+// import Icon from 'react-native-vector-icons/Ionicons';
+
 const Tab = createBottomTabNavigator();
 
-function MainTabs() {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: string;
-
-          if (route.name === 'History') {
-            iconName = focused ? 'clipboard' : 'clipboard-outline';
-          } else if (route.name === 'Suggestions') {
-            iconName = focused ? 'bulb' : 'bulb-outline';
-          } else if (route.name === 'Settings') {
-            iconName = focused ? 'settings' : 'settings-outline';
-          } else {
-            iconName = 'help-outline';
-          }
-
-          return <Icon name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#6366f1',
-        tabBarInactiveTintColor: 'gray',
-        headerShown: false,
-      })}
-    >
-      <Tab.Screen name="History" component={ClipboardHistoryScreen} />
-      <Tab.Screen name="Suggestions" component={SuggestionsScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
-    </Tab.Navigator>
-  );
-}
-
-function App(): JSX.Element {
-  const { isAuthenticated, initialize: initAuth } = useAuthStore();
-  const { initialize: initClipboard } = useClipboardStore();
-
-  useEffect(() => {
-    initAuth();
-  }, [initAuth]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      initClipboard();
-    }
-  }, [isAuthenticated, initClipboard]);
-
+export default function App() {
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {isAuthenticated ? (
-            <Stack.Screen name="Main" component={MainTabs} />
-          ) : (
-            <Stack.Screen name="Login" component={LoginScreen} />
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
-      <Toast />
+      <AuthProvider>
+        <ClipboardProvider>
+          <NavigationContainer>
+            <StatusBar barStyle="dark-content" backgroundColor="#007AFF" />
+            <Tab.Navigator
+              screenOptions={({ route }) => ({
+                tabBarIcon: ({ focused, color, size }) => {
+                  let iconText: string;
+
+                  if (route.name === 'Clipboard') {
+                    iconText = '📋';
+                  } else if (route.name === 'Suggestions') {
+                    iconText = '🤖';
+                  } else if (route.name === 'Settings') {
+                    iconText = '⚙️';
+                  } else {
+                    iconText = '❓';
+                  }
+
+                  return <Text style={{ fontSize: size, color }}>{iconText}</Text>;
+                },
+                tabBarActiveTintColor: '#007AFF',
+                tabBarInactiveTintColor: 'gray',
+                headerStyle: {
+                  backgroundColor: '#007AFF',
+                },
+                headerTintColor: '#fff',
+                headerTitleStyle: {
+                  fontWeight: 'bold',
+                },
+              })}
+            >
+              <Tab.Screen 
+                name="Clipboard" 
+                component={ClipboardScreen}
+                options={{ title: '📋 Clipboard' }}
+              />
+              <Tab.Screen 
+                name="Suggestions" 
+                component={SuggestionsScreen}
+                options={{ title: '🤖 AI Suggestions' }}
+              />
+              <Tab.Screen 
+                name="Settings" 
+                component={SettingsScreen}
+                options={{ title: '⚙️ Settings' }}
+              />
+            </Tab.Navigator>
+          </NavigationContainer>
+        </ClipboardProvider>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }
-
-export default App;

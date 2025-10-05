@@ -2,27 +2,38 @@ import React from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
+  TouchableOpacity,
   Switch,
   Alert,
+  ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useAuthStore } from '../store/authStore';
+import { useAuth } from '../context/AuthContext';
+import { useClipboard } from '../context/ClipboardContext';
 
 const SettingsScreen: React.FC = () => {
-  const { user, logout } = useAuthStore();
+  const { user, logout } = useAuth();
+  const { isOffline, refreshItems } = useClipboard();
 
   const handleLogout = () => {
     Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
+      'Logout',
+      'Are you sure you want to logout?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign Out', style: 'destructive', onPress: logout },
+        { text: 'Logout', onPress: logout, style: 'destructive' },
       ]
     );
+  };
+
+  const handleSync = async () => {
+    try {
+      await refreshItems();
+      Alert.alert('Success', 'Data synced successfully');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to sync data');
+    }
   };
 
   const SettingItem: React.FC<{
@@ -33,214 +44,242 @@ const SettingsScreen: React.FC = () => {
     rightElement?: React.ReactNode;
   }> = ({ icon, title, subtitle, onPress, rightElement }) => (
     <TouchableOpacity style={styles.settingItem} onPress={onPress}>
-      <View style={styles.settingLeft}>
-        <View style={styles.iconContainer}>
-          <Icon name={icon} size={20} color="#6366f1" />
-        </View>
-        <View style={styles.settingContent}>
-          <Text style={styles.settingTitle}>{title}</Text>
-          {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
-        </View>
+      <View style={styles.settingIcon}>
+        <Icon name={icon} size={24} color="#007AFF" />
+      </View>
+      <View style={styles.settingContent}>
+        <Text style={styles.settingTitle}>{title}</Text>
+        {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
       </View>
       {rightElement || (
-        <Icon name="chevron-forward" size={20} color="#9ca3af" />
+        <Icon name="chevron-forward" size={20} color="#CCC" />
       )}
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Settings</Text>
+    <ScrollView style={styles.container}>
+      {/* User Profile Section */}
+      <View style={styles.section}>
+        <View style={styles.profileContainer}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {user?.email?.charAt(0).toUpperCase() || 'U'}
+            </Text>
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{user?.name || 'User'}</Text>
+            <Text style={styles.profileEmail}>{user?.email}</Text>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: isOffline ? '#FF6B6B' : '#4CAF50' }]}>
+            <Text style={styles.statusText}>
+              {isOffline ? 'Offline' : 'Online'}
+            </Text>
+          </View>
+        </View>
       </View>
 
-      <View style={styles.content}>
-        {/* User Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          <View style={styles.userCard}>
-            <View style={styles.userInfo}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {user?.email.charAt(0).toUpperCase()}
-                </Text>
-              </View>
-              <View>
-                <Text style={styles.userName}>{user?.email}</Text>
-                <Text style={styles.userSubtitle}>Signed in</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Preferences Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
-          <View style={styles.settingsGroup}>
-            <SettingItem
-              icon="notifications-outline"
-              title="Notifications"
-              subtitle="Get notified about new suggestions"
-              rightElement={<Switch value={true} onValueChange={() => {}} />}
-            />
-            <SettingItem
-              icon="sync-outline"
-              title="Auto Sync"
-              subtitle="Automatically sync across devices"
-              rightElement={<Switch value={true} onValueChange={() => {}} />}
-            />
-            <SettingItem
-              icon="flash-outline"
-              title="AI Processing"
-              subtitle="Enable smart content analysis"
-              rightElement={<Switch value={true} onValueChange={() => {}} />}
-            />
-          </View>
-        </View>
-
-        {/* Storage Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Storage</Text>
-          <View style={styles.settingsGroup}>
-            <SettingItem
-              icon="archive-outline"
-              title="History Limit"
-              subtitle="Keep last 1000 items"
-            />
-            <SettingItem
-              icon="trash-outline"
-              title="Clear History"
-              subtitle="Remove all clipboard items"
-            />
-          </View>
-        </View>
-
-        {/* About Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
-          <View style={styles.settingsGroup}>
-            <SettingItem
-              icon="information-circle-outline"
-              title="Version"
-              subtitle="1.0.0"
-            />
-            <SettingItem
-              icon="help-circle-outline"
-              title="Help & Support"
-            />
-            <SettingItem
-              icon="shield-checkmark-outline"
-              title="Privacy Policy"
-            />
-          </View>
-        </View>
-
-        {/* Sign Out */}
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.signOutButton} onPress={handleLogout}>
-            <Icon name="log-out-outline" size={20} color="#ef4444" />
-            <Text style={styles.signOutText}>Sign Out</Text>
-          </TouchableOpacity>
-        </View>
+      {/* Sync Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Synchronization</Text>
+        <SettingItem
+          icon="sync"
+          title="Sync Now"
+          subtitle="Sync clipboard data with server"
+          onPress={handleSync}
+        />
+        <SettingItem
+          icon="cloud"
+          title="Auto Sync"
+          subtitle="Automatically sync when online"
+          rightElement={<Switch value={true} onValueChange={() => {}} />}
+        />
       </View>
-    </SafeAreaView>
+
+      {/* Privacy Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Privacy & Security</Text>
+        <SettingItem
+          icon="shield-checkmark"
+          title="Data Encryption"
+          subtitle="Encrypt sensitive clipboard data"
+          rightElement={<Switch value={true} onValueChange={() => {}} />}
+        />
+        <SettingItem
+          icon="time"
+          title="Auto Delete"
+          subtitle="Delete old items after 30 days"
+          rightElement={<Switch value={false} onValueChange={() => {}} />}
+        />
+        <SettingItem
+          icon="eye-off"
+          title="Private Mode"
+          subtitle="Don't save sensitive content"
+          rightElement={<Switch value={false} onValueChange={() => {}} />}
+        />
+      </View>
+
+      {/* AI Settings */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>AI Features</Text>
+        <SettingItem
+          icon="bulb"
+          title="Smart Suggestions"
+          subtitle="AI-powered action suggestions"
+          rightElement={<Switch value={true} onValueChange={() => {}} />}
+        />
+        <SettingItem
+          icon="analytics"
+          title="Content Analysis"
+          subtitle="Analyze clipboard content for entities"
+          rightElement={<Switch value={true} onValueChange={() => {}} />}
+        />
+        <SettingItem
+          icon="language"
+          title="Auto Translation"
+          subtitle="Detect and offer translations"
+          rightElement={<Switch value={false} onValueChange={() => {}} />}
+        />
+      </View>
+
+      {/* App Settings */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>App Settings</Text>
+        <SettingItem
+          icon="notifications"
+          title="Notifications"
+          subtitle="Push notifications for new suggestions"
+          rightElement={<Switch value={true} onValueChange={() => {}} />}
+        />
+        <SettingItem
+          icon="moon"
+          title="Dark Mode"
+          subtitle="Use dark theme"
+          rightElement={<Switch value={false} onValueChange={() => {}} />}
+        />
+        <SettingItem
+          icon="refresh"
+          title="Background Refresh"
+          subtitle="Keep app updated in background"
+          rightElement={<Switch value={true} onValueChange={() => {}} />}
+        />
+      </View>
+
+      {/* About Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>About</Text>
+        <SettingItem
+          icon="information-circle"
+          title="App Version"
+          subtitle="1.0.0 (Build 1)"
+        />
+        <SettingItem
+          icon="help-circle"
+          title="Help & Support"
+          subtitle="Get help and contact support"
+        />
+        <SettingItem
+          icon="document-text"
+          title="Privacy Policy"
+          subtitle="Read our privacy policy"
+        />
+      </View>
+
+      {/* Logout Section */}
+      <View style={styles.section}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Icon name="log-out" size={24} color="#FF3B30" />
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>
+          Epitychia Smart Clipboard Manager
+        </Text>
+        <Text style={styles.footerSubtext}>
+          Made with ❤️ for productivity
+        </Text>
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  header: {
-    backgroundColor: 'white',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
+    backgroundColor: '#F5F5F5',
   },
   section: {
-    marginTop: 24,
+    backgroundColor: '#FFF',
+    marginTop: 20,
+    paddingVertical: 8,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
-    marginBottom: 12,
-    paddingHorizontal: 4,
+    color: '#333',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#F8F9FA',
   },
-  userCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  userInfo: {
+  profileContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 16,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#6366f1',
-    justifyContent: 'center',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#007AFF',
     alignItems: 'center',
-    marginRight: 12,
+    justifyContent: 'center',
+    marginRight: 16,
   },
   avatarText: {
-    color: 'white',
+    color: '#FFF',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
     fontSize: 18,
     fontWeight: '600',
+    color: '#333',
   },
-  userName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-  },
-  userSubtitle: {
+  profileEmail: {
     fontSize: 14,
-    color: '#6b7280',
+    color: '#666',
+    marginTop: 2,
   },
-  settingsGroup: {
-    backgroundColor: 'white',
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    overflow: 'hidden',
+  },
+  statusText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '600',
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    borderBottomColor: '#F0F0F0',
   },
-  settingLeft: {
-    flexDirection: 'row',
+  settingIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F0F8FF',
     alignItems: 'center',
-    flex: 1,
-  },
-  iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#f0f9ff',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+    marginRight: 16,
   },
   settingContent: {
     flex: 1,
@@ -248,28 +287,43 @@ const styles = StyleSheet.create({
   settingTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#1f2937',
+    color: '#333',
   },
   settingSubtitle: {
     fontSize: 14,
-    color: '#6b7280',
+    color: '#666',
     marginTop: 2,
   },
-  signOutButton: {
+  logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'white',
+    padding: 16,
+    margin: 16,
+    backgroundColor: '#FFF',
     borderRadius: 12,
-    paddingVertical: 16,
     borderWidth: 1,
-    borderColor: '#fecaca',
+    borderColor: '#FF3B30',
   },
-  signOutText: {
+  logoutText: {
+    color: '#FF3B30',
     fontSize: 16,
     fontWeight: '600',
-    color: '#ef4444',
     marginLeft: 8,
+  },
+  footer: {
+    alignItems: 'center',
+    padding: 32,
+  },
+  footerText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  footerSubtext: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
   },
 });
 

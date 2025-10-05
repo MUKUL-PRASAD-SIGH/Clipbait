@@ -1,81 +1,118 @@
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ClipboardItem, User } from '../types';
+import { ClipboardItem, ActionSuggestion } from '../types';
 
-const API_BASE_URL = __DEV__ 
-  ? 'http://localhost:3000/api' 
-  : 'https://your-production-api.com/api';
+const API_BASE_URL = 'http://localhost:3001/api'; // Your backend URL
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add auth token to requests
-api.interceptors.request.use(async (config) => {
-  const token = await AsyncStorage.getItem('auth_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+class ApiClient {
+  private async getAuthToken(): Promise<string | null> {
+    return await AsyncStorage.getItem('auth_token');
   }
-  return config;
-});
 
-// Handle auth errors
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    if (error.response?.status === 401) {
-      await AsyncStorage.removeItem('auth_token');
-      // Navigate to login screen - this would need to be handled by navigation
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const token = await this.getAuthToken();
+    
+    const config: RequestInit = {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      },
+    };
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Network error' }));
+      throw new Error(error.message || `HTTP ${response.status}`);
     }
-    return Promise.reject(error);
+
+    return response.json();
   }
-);
 
-export const authApi = {
-  login: async (email: string, password: string) => {
-    const response = await api.post('/auth/login', { email, password });
-    return response.data.data;
-  },
-
-  register: async (email: string, password: string) => {
-    const response = await api.post('/auth/register', { email, password });
-    return response.data.data;
-  },
-
-  getCurrentUser: async (): Promise<User> => {
-    const response = await api.get('/auth/me');
-    return response.data.data;
-  },
-};
-
-export const clipboardApi = {
-  getHistory: async (): Promise<ClipboardItem[]> => {
-    const response = await api.get('/clipboard/history');
-    return response.data.data;
-  },
-
-  addItem: async (content: string): Promise<ClipboardItem> => {
-    const response = await api.post('/clipboard/add', { 
-      content,
-      contentType: 'text',
-      deviceId: 'mobile-app'
+  // Auth API
+  async login(email: string, password: string) {
+    return this.request<{ user: any; token: string }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
     });
-    return response.data.data;
-  },
+  }
 
-  deleteItem: async (id: string): Promise<void> => {
-    await api.delete(`/clipboard/${id}`);
-  },
+  async register(email: string, password: string, name?: string) {
+    return this.request<{ user: any; token: string }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, name }),
+    });
+  }
 
-  executeSuggestion: async (suggestionId: string): Promise<void> => {
-    await api.post(`/clipboard/execute-suggestion/${suggestionId}`);
-  },
+  async verifyToken(token: string) {
+    return this.request<any>('/auth/verify', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }
 
-  search: async (query: string): Promise<ClipboardItem[]> => {
-    const response = await api.get(`/clipboard/search?q=${encodeURIComponent(query)}`);
-    return response.data.data;
-  },
-};
+  async logout() {
+    return this.request<void>('/auth/logout', {
+      method: 'POST',
+    });
+  }
+
+  // Clipboard API
+  async getHistory(page = 1, limit = 50): Promise<ClipboardItem[]> {
+    const response = await this.request<{ success: boolean; data: ClipboardItem[] }>(
+      `/clipboard?page=${page}&limit=${limit}`
+    );
+    return response.data;
+  }
+
+  async addItem(content: string): Promise<ClipboardItem> {
+    const response = await this.request<{ success: boolean; data: ClipboardItem }>(
+      '/clipboard',
+      {
+        method: 'POST',
+        body: JSON.stringify({ content, contentType: 'text' }),
+      }
+    );
+    return response.data;
+  }
+
+  async deleteItem(id: string): Promise<void> {
+    await this.request<void>(`/clipboard/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async executeSuggestion(suggestionId: string): Promise<void> {
+    await this.request<void>('/ai/execute', {
+      method: 'POST',
+      body: JSON.stringify({ suggestionId }),
+    });
+  }
+
+  // AI API
+  async processContent(content: string): Promise<{ entities: any[]; suggestions: ActionSuggestion[] }> {
+    const response = await this.request<{ success: boolean; data: any }>('/ai/process', {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+    return response.data;
+  }
+
+  async getSuggestions(content: string): Promise<ActionSuggestion[]> {
+    const response = await this.request<{ success: boolean; suggestions: ActionSuggestion[] }>(
+      '/ai/suggestions',
+      {
+        method: 'POST',
+        body: JSON.stringify({ content }),
+      }
+    );
+    return response.suggestions;
+  }
+}
+
+export const authApi = new ApiClient();
+export const clipboardApi = new ApiClient();

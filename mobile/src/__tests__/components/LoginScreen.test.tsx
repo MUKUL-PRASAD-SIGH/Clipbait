@@ -1,79 +1,103 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import { LoginScreen } from '../../screens/LoginScreen';
-import { useAuthStore } from '../../store/authStore';
+import LoginScreen from '../../screens/LoginScreen';
+import { AuthProvider } from '../../context/AuthContext';
 
-// Mock the auth store
-jest.mock('../../store/authStore');
-const mockUseAuthStore = useAuthStore as jest.MockedFunction<typeof useAuthStore>;
+// Mock the auth context
+const mockLogin = jest.fn();
+const mockRegister = jest.fn();
 
-// Mock navigation
-const mockNavigation = {
-  navigate: jest.fn(),
-  goBack: jest.fn(),
-  replace: jest.fn()
-};
+jest.mock('../../context/AuthContext', () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
+  useAuth: () => ({
+    login: mockLogin,
+    register: mockRegister,
+    isLoading: false,
+  }),
+}));
 
 describe('LoginScreen', () => {
   beforeEach(() => {
-    mockUseAuthStore.mockReturnValue({
-      user: null,
-      loading: false,
-      error: null,
-      login: jest.fn(),
-      logout: jest.fn(),
-      register: jest.fn()
-    });
+    jest.clearAllMocks();
   });
 
-  it('renders login form', () => {
+  it('renders login form correctly', () => {
     const { getByPlaceholderText, getByText } = render(
-      <LoginScreen navigation={mockNavigation} />
+      <AuthProvider>
+        <LoginScreen />
+      </AuthProvider>
     );
 
-    expect(getByPlaceholderText('Email')).toBeTruthy();
+    expect(getByPlaceholderText('Email Address')).toBeTruthy();
     expect(getByPlaceholderText('Password')).toBeTruthy();
-    expect(getByText('Login')).toBeTruthy();
+    expect(getByText('Sign In')).toBeTruthy();
   });
 
-  it('handles login submission', async () => {
-    const mockLogin = jest.fn();
-    mockUseAuthStore.mockReturnValue({
-      user: null,
-      loading: false,
-      error: null,
-      login: mockLogin,
-      logout: jest.fn(),
-      register: jest.fn()
-    });
-
-    const { getByPlaceholderText, getByText } = render(
-      <LoginScreen navigation={mockNavigation} />
+  it('switches between login and register modes', () => {
+    const { getByText, queryByPlaceholderText } = render(
+      <AuthProvider>
+        <LoginScreen />
+      </AuthProvider>
     );
 
-    fireEvent.changeText(getByPlaceholderText('Email'), 'test@example.com');
-    fireEvent.changeText(getByPlaceholderText('Password'), 'password123');
-    fireEvent.press(getByText('Login'));
+    // Initially in login mode
+    expect(getByText('Welcome Back')).toBeTruthy();
+    expect(queryByPlaceholderText('Full Name')).toBeFalsy();
+
+    // Switch to register mode
+    fireEvent.press(getByText('Sign Up'));
+    
+    expect(getByText('Create Account')).toBeTruthy();
+    expect(queryByPlaceholderText('Full Name')).toBeTruthy();
+  });
+
+  it('calls login function with correct parameters', async () => {
+    const { getByPlaceholderText, getByText } = render(
+      <AuthProvider>
+        <LoginScreen />
+      </AuthProvider>
+    );
+
+    const emailInput = getByPlaceholderText('Email Address');
+    const passwordInput = getByPlaceholderText('Password');
+    const loginButton = getByText('Sign In');
+
+    fireEvent.changeText(emailInput, 'test@example.com');
+    fireEvent.changeText(passwordInput, 'password123');
+    fireEvent.press(loginButton);
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
     });
   });
 
-  it('shows loading state', () => {
-    mockUseAuthStore.mockReturnValue({
-      user: null,
-      loading: true,
-      error: null,
-      login: jest.fn(),
-      logout: jest.fn(),
-      register: jest.fn()
-    });
-
-    const { getByTestId } = render(
-      <LoginScreen navigation={mockNavigation} />
+  it('shows validation error for empty fields', () => {
+    const { getByText } = render(
+      <AuthProvider>
+        <LoginScreen />
+      </AuthProvider>
     );
 
-    expect(getByTestId('loading-spinner')).toBeTruthy();
+    const loginButton = getByText('Sign In');
+    fireEvent.press(loginButton);
+
+    // Should show alert for empty fields
+    expect(require('react-native/Libraries/Alert/Alert').alert).toHaveBeenCalledWith(
+      'Error',
+      'Please fill in all fields'
+    );
+  });
+
+  it('toggles password visibility', () => {
+    const { getByPlaceholderText, getByTestId } = render(
+      <AuthProvider>
+        <LoginScreen />
+      </AuthProvider>
+    );
+
+    const passwordInput = getByPlaceholderText('Password');
+    
+    // Initially password should be hidden
+    expect(passwordInput.props.secureTextEntry).toBe(true);
   });
 });

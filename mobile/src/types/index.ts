@@ -1,37 +1,19 @@
-export interface User {
-  id: string;
-  email: string;
-  firebaseUid: string;
-  preferences: UserPreferences;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface UserPreferences {
-  enableNotifications: boolean;
-  autoSync: boolean;
-  maxHistoryItems: number;
-  enableAI: boolean;
-}
-
 export interface ClipboardItem {
   id: string;
-  userId: string;
   content: string;
   contentType: 'text' | 'image' | 'file' | 'url';
-  metadata: ClipboardMetadata;
   entities: DetectedEntity[];
   suggestions: ActionSuggestion[];
+  metadata: ClipboardMetadata;
   createdAt: string;
   updatedAt: string;
-  deviceId?: string;
 }
 
 export interface ClipboardMetadata {
-  sourceApp?: string;
-  deviceId?: string;
   category: ContentCategory;
   confidence: number;
+  sourceApp?: string;
+  deviceId?: string;
   size?: number;
   mimeType?: string;
 }
