@@ -7,7 +7,8 @@
 </div>
 
 ---
-video link---https://drive.google.com/file/d/11lmhnBT4EiH-2lfQtKBk1gCVFeWaU6RH/view
+video link---https://drive.usercontent.google.com/download?id=1uGGnBQxBxcWNA8_PzvGS9T-nNgl0lraX&export=download&authuser=0
+
 ## 📋 Table of Contents
 
 - [🎯 About](#-about)
