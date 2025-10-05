@@ -17,8 +17,9 @@
 Before you begin, make sure you have these installed on your computer:
 
 1. **Node.js** (version 16 or higher) - [Download here](https://nodejs.org/)
-2. **Git** - [Download here](https://git-scm.com/)
-3. **Google Chrome** browser
+2. **Python** (version 3.8 or higher) - [Download here](https://python.org/)
+3. **Git** - [Download here](https://git-scm.com/)
+4. **Google Chrome** browser
 
 ### Step 1: Download the Project
 
@@ -49,7 +50,24 @@ npm run dev
 
 The backend will start on `http://localhost:3000`
 
-### Step 3: Set Up the Desktop App
+### Step 3: Set Up the AI Service
+
+Open a new terminal window:
+
+```bash
+# Navigate to AI service folder
+cd backend/ai-service
+
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Start the AI service
+python app.py
+```
+
+The AI service will start on `http://localhost:5000` and provide text transformation capabilities.
+
+### Step 4: Set Up the Desktop App
 
 Open a new terminal window:
 
@@ -66,7 +84,7 @@ npm run tauri dev
 
 The desktop app will open automatically.
 
-### Step 4: Install the Chrome Extension
+### Step 5: Install the Chrome Extension
 
 1. Open Google Chrome
 2. Go to `chrome://extensions/`
@@ -75,7 +93,7 @@ The desktop app will open automatically.
 5. Select the `chrome-extension` folder from this project
 6. The Epitychia extension icon should appear in your browser toolbar
 
-### Step 5: Create Your Account
+### Step 6: Create Your Account
 
 1. Click the Epitychia extension icon in Chrome
 2. Click "Register" to create a new account
@@ -135,17 +153,19 @@ USE_HUGGINGFACE=true
 ### Project Structure
 ```
 epitychia/
-├── backend/          # Node.js API server
-├── desktop/          # Tauri desktop application  
-├── chrome-extension/ # Chrome browser extension
-└── shared/           # Shared TypeScript types
+├── backend/              # Node.js API server
+│   └── ai-service/       # Python AI transformation service
+├── desktop/              # Tauri desktop application  
+├── chrome-extension/     # Chrome browser extension
+└── shared/               # Shared TypeScript types
 ```
 
 ### Running in Development Mode
 
 1. **Backend**: `cd backend && npm run dev`
-2. **Desktop**: `cd desktop && npm run tauri dev`  
-3. **Extension**: Load unpacked in Chrome developer mode
+2. **AI Service**: `cd backend/ai-service && python app.py`
+3. **Desktop**: `cd desktop && npm run tauri dev`  
+4. **Extension**: Load unpacked in Chrome developer mode
 
 ### Building for Production
 
@@ -181,13 +201,22 @@ npm start
 - Check that no other app is using port 1420
 
 **AI transformations not working?**
-- The app works with fallback transformations even without AI API keys
-- For full AI features, add your Hugging Face API key to backend/.env
+- Make sure the AI service is running (`python app.py` in backend/ai-service folder)
+- Check that Python dependencies are installed (`pip install -r requirements.txt`)
+- The app works with fallback transformations even without AI models
+- For full AI features, ensure PyTorch and transformers are properly installed
+
+**AI service installation issues?**
+- Ensure Python 3.8+ is installed
+- If you get PyTorch version errors, the requirements.txt has been updated with compatible versions
+- For CUDA support, install the appropriate PyTorch version for your GPU
+- On Windows, you may need Visual Studio Build Tools for some dependencies
 
 **Backend connection errors?**
 - Verify the backend is running on port 3000
+- Verify the AI service is running on port 5000
 - Check firewall settings
-- Ensure no other service is using port 3000
+- Ensure no other service is using ports 3000 or 5000
 
 ### Getting Help
 
